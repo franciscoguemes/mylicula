@@ -36,9 +36,9 @@ hashalot
 # Development
 #****************************************************************************************************
 git
-# The java update alternatives
-java-common
-
+gcc
+g++
+libxml2-utils
 
 
 
