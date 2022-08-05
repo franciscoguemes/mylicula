@@ -1,4 +1,5 @@
 
+#TODO: Update with the script in the Nextcloud/Configuration folder...
 
 #TODO: Download pycharm-community
 
