@@ -43,12 +43,13 @@ done
 #-----------------------------------------------------------------------------
 # Set the icons to the directories
 #-----------------------------------------------------------------------------
-# See: https://forums.linuxmint.com/viewtopic.php?t=352261
+# See:  https://askubuntu.com/questions/1044358/is-it-possible-to-insert-icons-on-folders-with-the-gio-set-command
+#       https://forums.linuxmint.com/viewtopic.php?t=352261
 #
-# gio set $DIRECTORY -t unset metadata::custom-icon
-# gio set "${HOME}/Documents/Nextcloud" -t unset metadata::custom-icon
+# Set the default icon back:
+#   gio set $DIRECTORY -t unset metadata::custom-icon
+#   gio set "${HOME}/Documents/Nextcloud" -t unset metadata::custom-icon
 
-echo "${HOME}/Documents/Nextcloud"
-echo "${DESTINATION_DIR}/Nextcloud_directory.png"
-gio set "${HOME}/Documents/Nextcloud" -t string metadata::custom-icon "${DESTINATION_DIR}/Nextcloud_directory.png"
-# gio set "${HOME}/Documents/Nextcloud" -t string metadata::custom-icon "${ICONS_DIR}/Nextcloud_directory.png"
+#echo "${HOME}/Documents/Nextcloud"
+#echo "${DESTINATION_DIR}/Nextcloud_directory.png"
+gio set -t string "${HOME}/Documents/Nextcloud" metadata::custom-icon "file://${DESTINATION_DIR}/Nextcloud_directory.png"
