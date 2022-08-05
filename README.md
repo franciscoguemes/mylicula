@@ -11,6 +11,9 @@ much more.
 The entire idea of creating this project is to automatize the ideas exposed in the article [General Conventions](/home/francisco/git/francisco/franciscoguemes.com/mdwiki/entries/setup/General%20Conventions.md)
 
 
+# Usage
+This project takes as starting that the user has followed [these manual steps](https://mdwiki.franciscoguemes.com/#!NEW.md) in the new computer.
+
 
 # Structure of the project
 
@@ -20,13 +23,15 @@ The project is structured in the following directories:
 tree -L 2 .
 .
 ├── customize
-│   ├── git
-│   ├── linux
-│   ├── linux_setup.sh
-│   ├── templates
-│   ├── ubuntu
-│   └── ubuntu_setup.sh
+│   └── ubuntu
+├── in_review
+│   ├── git
+│   ├── linux
+│   ├── linux_setup.sh
+│   ├── ubuntu
+│   └── ubuntu_setup.sh
 ├── install.sh
+├── LICENSE
 ├── README.md
 ├── Testing.md
 └── TODO.md
@@ -37,6 +42,7 @@ machine. It is an interactive scritp that will ask you a few questions.
 
 The scripts under the _customize_ directory are the ones designated to transform your OS in order to get a similar setup than the one I have in all my machines. In other words you can get the same Ubuntu customization (UI, extra menu options, etc..) and the same Linux customization (Installed packages, extender terminal functions, environment variables, etc...). Inside the _customize_ directory there are the scripts _linux_setup.sh_ and _ubuntu_setup.sh_ to install the respective customizations.
 
+The scripts under the *in_review* directory are scripts that are not yet production ready and therefore they need more refinement and testing.
 
 
 ## Requirements

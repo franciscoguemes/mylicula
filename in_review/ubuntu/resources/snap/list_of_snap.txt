@@ -1,0 +1,19 @@
+####################################################################################################
+# All the snap packages listed here are installed with the Ubuntu packet
+# manager: 
+#           sudo snap install PACKET_NAME
+#
+#           sudo snap install \
+#               PACKET_1 \
+#               PACKET_2 \
+#               ... \
+#               PACKET_N \
+#
+####################################################################################################
+
+postman
+# chromium
+yq
+
+# sudo snap install --classic heroku
+heroku

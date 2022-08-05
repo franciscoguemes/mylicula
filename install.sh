@@ -44,12 +44,13 @@ BASE_DIR=$(get_script_directory)
 #-----------------------------------------------------------------------------
 # Load functions from the commons/paths.sh file
 #-----------------------------------------------------------------------------
-source $BASE_DIR/commons/paths.sh
+#source $BASE_DIR/commons/paths.sh
 
 
+echo ${BASE_DIR}
 
-
-
+${BASE_DIR}/customize/linux_setup.sh
+${BASE_DIR}/customize/ubuntu_setup.sh
 
 
 # for filename in /Data/*.txt; do

@@ -1,5 +1,7 @@
 
 # Project Basis
+- Create installation script in the parent directory (A script that - installs the other scripts in the system)
+- Review all the scripts in the directory `in_review` and make them production ready (from a functional perspective) and move them to the `customize` directory
 - Review this file and ensure the TODOs are actual
 - Test with a docker Ubuntu image
   - Create a docker Ubuntu container for testing
@@ -7,10 +9,6 @@
 - copy/paste inside the _new_structure_directory each script on its respective folder
 - get the content of the _new_structure_ directory and put it in the root directory
 - create a .gitignore
-- Reestructure the project
-  - Create directory folder structure
-  - Move scripts to the folders
-- Create installation script in the parent folder (A script that - installs the other scripts in the system)
 - Create a proper README.md file
 - Branching strategy
 - Bash Script templates:
