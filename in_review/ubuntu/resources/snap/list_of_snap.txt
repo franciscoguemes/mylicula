@@ -17,3 +17,7 @@ yq
 
 # sudo snap install --classic heroku
 heroku
+
+# Application for display and control of Android devices connected by USB or TCP/IP
+scrcpy
+guiscrcpy

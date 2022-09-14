@@ -38,13 +38,21 @@ peek
 # Animations
 pencil2d
 
+#****************************************************************************************************
+# Configure Gnome
+#****************************************************************************************************
+# https://gitlab.gnome.org/GNOME/gnome-shell-extensions
+gnome-shell-extension-prefs
+# https://gitlab.gnome.org/GNOME/gnome-tweaks
+gnome-tweak-tool
+# https://chrome.google.com/webstore/detail/gnome-shell-integration/gphhapmejobijbbhgpjhcjognlahblep?hl=en
+chrome-gnome-shell
+
 
 #****************************************************************************************************
 # Connectivity
 #****************************************************************************************************
-
 # Android --> GSConnect: https://www.omgubuntu.co.uk/2018/11/connect-android-ubuntu-gsconnect
-chrome-gnome-shell
 gnome-shell-extension-gsconnect
 
 
