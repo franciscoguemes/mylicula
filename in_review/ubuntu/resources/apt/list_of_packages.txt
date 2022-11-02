@@ -14,6 +14,9 @@
 # Plugins for gedit: https://stackoverflow.com/questions/7649626/block-commenting-in-gedit
 gedit-plugins
 
+# Markdown editor https://askubuntu.com/a/1387052/227301
+retext
+
 # Fix Ubuntu 20.04 lockscreen not working
 # https://askubuntu.com/questions/184728/how-do-i-lock-the-screen-from-a-terminal
 # https://askubuntu.com/questions/1242110/after-upgrading-to-ubuntu-20-04-lockscreen-not-working
