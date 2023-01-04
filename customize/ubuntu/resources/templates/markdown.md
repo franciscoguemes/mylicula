@@ -3,6 +3,9 @@ Markdown template
 
 ----
 
+----
+
+----
 
 Block quote
 
