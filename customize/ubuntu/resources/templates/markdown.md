@@ -29,4 +29,5 @@ Tables (Not supported in all editors)
 ----
 - [cheat sheet](https://www.markdownguide.org/cheat-sheet/)
 - [Basic syntax](https://www.markdownguide.org/basic-syntax/)
+- [Link to a section](https://linuxhint.com/markdown-link-section/)
 - [table generator](https://www.tablesgenerator.com/markdown_tables#)
