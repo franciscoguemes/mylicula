@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
 ####################################################################################################
-#Script Name	: yourscriptname.sh                                                                                             
+#Args           :                                                                                            
+#Usage          :                                                                                            
+#Output stdout  :
+#Output stderr  :
+#Return code    :
 #Description	: Here it goes your description
-#                                                                                 
-#Args           :                                                                                           
+#                                                                                                                                                           
 #Author       	: Francisco Güemes                                                
 #Email         	: francisco@franciscoguemes.com                                           
 #See also	    : https://stackoverflow.com/questions/14008125/shell-script-common-template
