@@ -1,5 +1,9 @@
 
 # Project Basis
+- Define an order for things. Install first [nala](https://gitlab.com/volian/nala#installation) before installing any package using `apt`.
+  After installing nala, use `nala` to install all packages
+- Install zsh ( https://ohmyz.sh/#install )
+
 - Create installation script in the parent directory (A script that - installs the other scripts in the system)
 - Review all the scripts in the directory `in_review` and make them production ready (from a functional perspective) and move them to the `customize` directory
 - Review this file and ensure the TODOs are actual
@@ -124,14 +128,6 @@ Source:
  - [Diagrams with plantuml](https://blog.anoff.io/2018-07-31-diagrams-with-plantuml/)
 
 
-
-# Ideas for future scripts
-
-## Script for checking sha256 on right click
-Script that creates a new entry on the right click menu when a single file is selected and shows a menu called "Checksum" and from here a set of options are displayed such as "sha256", "md5", etc ... When the user selects one of this options (i.e. sha256) a popup textbox is displayed where the user can copy/paste the checksum to be checked.
-
-## Joint PDFs on right click
-Script that creates a new entry on the right click menu when 2 or more PDF files are selected and merge. If the user selects the option "Merge PDFs" the action will result in a new PDF document that contains all the other PDF documents merged by the sorting name in the OS (Check what is the sorting criteria for filenames in Linux). If there are files selected that are not PDF files (i.e 3 PDF files plus a JPG file, the non PDF files will be ignored).
 
 
 
