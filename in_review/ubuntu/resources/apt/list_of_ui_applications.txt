@@ -18,6 +18,12 @@ retext
 pencil
 filezilla
 virtualbox
+# Plugins for gedit: https://stackoverflow.com/questions/7649626/block-commenting-in-gedit
+gedit-plugins
+# Markdown editor https://askubuntu.com/a/1387052/227301
+retext
+# A terminal on which set the title in a programatic way
+xfce4-terminal
 
 
 #****************************************************************************************************

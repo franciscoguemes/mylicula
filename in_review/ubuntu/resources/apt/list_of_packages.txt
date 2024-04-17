@@ -11,9 +11,6 @@
 #
 ####################################################################################################
 
-
-
-
 # Plugins for gedit: https://stackoverflow.com/questions/7649626/block-commenting-in-gedit
 gedit-plugins
 
@@ -34,8 +31,7 @@ xclip
 # Simulate typing
 xdotool
 
-# A terminal on which set the title in a programatic way
-xfce4-terminal
+
 
 
 
