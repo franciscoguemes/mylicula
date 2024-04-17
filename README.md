@@ -4,7 +4,7 @@ My Linux Custom Layer
 
 
 This project contains a customization layer for (Ubuntu) Linux that I install on top of the OS.
-By doing this I ensure homogeneicity on all my Linux devices. That ensures me that all of my
+By doing this I ensure homogeneicity on all my Linux devices. This ensures me that all of my
 Linux devices will have the same applications, packages, menus, custom utilities, configuration and
 much more.
 
@@ -23,6 +23,7 @@ The project is structured in the following directories:
 tree -L 2 .
 .
 ├── customize
+│   ├── linux
 │   └── ubuntu
 ├── in_review
 │   ├── git
@@ -40,7 +41,7 @@ tree -L 2 .
 In the root directory there is a `install.sh` script that will install the entire customization layer in your 
 machine. It is an interactive scritp that will ask you a few questions.
 
-The scripts under the _customize_ directory are the ones designated to transform your OS in order to get a similar setup than the one I have in all my machines. In other words you can get the same Ubuntu customization (UI, extra menu options, etc..) and the same Linux customization (Installed packages, extender terminal functions, environment variables, etc...). Inside the _customize_ directory there are the scripts _linux_setup.sh_ and _ubuntu_setup.sh_ to install the respective customizations.
+The scripts under the _customize_ directory are the ones designated to transform your OS in order to get a similar setup than the one I have in all my machines. In other words you can get the same Ubuntu customization (UI, extra menu options, etc..) and the same Linux customization (Installed packages, extended terminal functions, environment variables, etc...). Inside the _customize_ directory there are the scripts _linux_setup.sh_ and _ubuntu_setup.sh_ to install the respective customizations.
 
 The scripts under the *in_review* directory are scripts that are not yet production ready and therefore they need more refinement and testing.
 

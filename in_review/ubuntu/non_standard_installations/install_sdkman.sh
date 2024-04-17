@@ -10,6 +10,12 @@ source "$HOME/.sdkman/bin/sdkman-init.sh"
 
 sdk version
 
+# Set "sdkman_auto_env" to true in the configuration file ~/.sdkman/etc/config 
+#   This tweak makes sdk to recognise the environment  configuration atuomatically
+#   See more: https://sdkman.io/usage
+sed -i -e 's/sdkman_auto_env=false/sdkman_auto_env=true/g' ~/.sdkman/etc/config
+ 
+
 #############################################
 # Install Java versions
 #############################################

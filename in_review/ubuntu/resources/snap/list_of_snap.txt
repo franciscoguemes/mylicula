@@ -11,8 +11,10 @@
 #
 ####################################################################################################
 
+slack
+chromium
 postman
-# chromium
+mysql-workbench-community
 yq
 
 # sudo snap install --classic heroku
