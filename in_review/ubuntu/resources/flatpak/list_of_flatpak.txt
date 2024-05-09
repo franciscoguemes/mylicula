@@ -1,0 +1,15 @@
+####################################################################################################
+# All the snap packages listed here are installed with the Flatpak packet
+# manager: 
+#           flatpak install REPO_NAME PACKET_NAME
+#
+#           flatpak install \
+#               REPO_1 PACKET_1 \
+#               REPO_2 PACKET_2 \
+#               ... \
+#               REPO_N PACKET_N \
+#
+####################################################################################################
+
+flathub net.mkiol.SpeechNote
+
