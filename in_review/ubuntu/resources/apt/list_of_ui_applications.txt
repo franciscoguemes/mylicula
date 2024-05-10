@@ -56,6 +56,8 @@ fbreader
 #****************************************************************************************************
 # Configure Gnome
 #****************************************************************************************************
+# https://askubuntu.com/questions/1404497/how-to-install-gnome-shell-extensions-in-ubuntu-22-04-lts
+gnome-shell-extension-manager
 # https://gitlab.gnome.org/GNOME/gnome-shell-extensions
 gnome-shell-extension-prefs
 # https://gitlab.gnome.org/GNOME/gnome-tweaks
