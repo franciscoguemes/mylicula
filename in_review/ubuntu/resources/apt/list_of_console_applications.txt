@@ -13,6 +13,9 @@ ncal
 figlet
 toilet
 wmctrl
+# Use the clipboard in the command line: https://opensource.com/article/19/7/xclip
+xclip
+# Simulate typing
 xdotool
 
 
@@ -30,6 +33,7 @@ speedtest
 #****************************************************************************************************
 jq
 libxml2-utils
+xmllint
 
 
 #****************************************************************************************************

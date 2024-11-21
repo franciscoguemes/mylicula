@@ -28,15 +28,6 @@ python-nautilus
 # To create GTK dialogue boxes from the terminal/scripts
 zenity
 
-# Use the clipboard in the command line: https://opensource.com/article/19/7/xclip
-xclip
-
-# Simulate typing
-xdotool
-
-
-
-
 
 
 #****************************************************************************************************
