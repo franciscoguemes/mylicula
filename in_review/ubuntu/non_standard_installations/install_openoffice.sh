@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+#TODO: Remove this script, is no longer relevant. Now I am using OnlyOffice installed by snap
 
 #TODO: Add some comments here...
 
