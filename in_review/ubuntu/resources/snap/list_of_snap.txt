@@ -13,6 +13,7 @@
 
 slack
 chromium
+libreoffice
 postman
 mysql-workbench-community
 yq

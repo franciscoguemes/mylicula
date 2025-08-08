@@ -11,6 +11,9 @@
 #
 ####################################################################################################
 
+# Integrate AppImage apps in the system: https://askubuntu.com/questions/902672/registering-an-appimage-file-as-a-desktop-app-in-kde
+appimagelauncher
+
 # Plugins for gedit: https://stackoverflow.com/questions/7649626/block-commenting-in-gedit
 gedit-plugins
 
@@ -24,15 +27,6 @@ python-nautilus
 
 # To create GTK dialogue boxes from the terminal/scripts
 zenity
-
-# Use the clipboard in the command line: https://opensource.com/article/19/7/xclip
-xclip
-
-# Simulate typing
-xdotool
-
-
-
 
 
 

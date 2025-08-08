@@ -12,6 +12,11 @@ tree
 ncal
 figlet
 toilet
+wmctrl
+# Use the clipboard in the command line: https://opensource.com/article/19/7/xclip
+xclip
+# Simulate typing
+xdotool
 
 
 #****************************************************************************************************
@@ -27,7 +32,9 @@ speedtest
 # Processors and pre-Processors
 #****************************************************************************************************
 jq
-xmlint
+libxml2-utils
+xmllint
+xmlstarlet
 
 
 #****************************************************************************************************
@@ -53,3 +60,8 @@ libxml2-utils
 mysql-client
 postgresql-client
 
+
+#****************************************************************************************************
+# Multimedia
+#****************************************************************************************************
+graphicsmagick-imagemagick-compat

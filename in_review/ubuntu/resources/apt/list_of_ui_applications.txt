@@ -8,10 +8,6 @@
 chromium-browser
 keepassxc
 
-
-# Markdown editor https://askubuntu.com/a/1387052/227301
-retext
-
 #****************************************************************************************************
 # Development
 #****************************************************************************************************
@@ -22,6 +18,8 @@ virtualbox
 gedit-plugins
 # Markdown editor https://askubuntu.com/a/1387052/227301
 retext
+# Compare files. http://meldmerge.org/
+meld
 # A terminal on which set the title in a programatic way
 xfce4-terminal
 
@@ -29,10 +27,22 @@ xfce4-terminal
 #****************************************************************************************************
 # Productivity
 #****************************************************************************************************
+gnome-shell-pomodoro
+
+
+#****************************************************************************************************
+# PDF Editors
+#****************************************************************************************************
 master-pdf-editor
 xournalpp
-# Compare files. http://meldmerge.org/
-meld
+
+
+#****************************************************************************************************
+# Latex
+#****************************************************************************************************
+texstudio
+latexmk
+
 
 #****************************************************************************************************
 # Multimedia
@@ -52,6 +62,8 @@ fbreader
 #****************************************************************************************************
 # Configure Gnome
 #****************************************************************************************************
+# https://askubuntu.com/questions/1404497/how-to-install-gnome-shell-extensions-in-ubuntu-22-04-lts
+gnome-shell-extension-manager
 # https://gitlab.gnome.org/GNOME/gnome-shell-extensions
 gnome-shell-extension-prefs
 # https://gitlab.gnome.org/GNOME/gnome-tweaks
