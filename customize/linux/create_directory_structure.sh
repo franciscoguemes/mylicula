@@ -25,7 +25,7 @@
 mkdir -p /usr/lib/jvm
 
 # Create user directories
-mkdir -p ${HOME}/{Downloads,Templates,Documents/{Mega,${COMPANY}},Videos,Music,Pictures}
+mkdir -p ${HOME}/{Downloads,Templates,Documents/{Mega,${COMPANY}},Books,Ebooks,Videos,Music,Pictures}
 mkdir -p ${HOME}/{bin,.config}
 mkdir -p ${HOME}/development/{flyway,eclipse,netbeans,intellij-community}
 mkdir -p ${HOME}/git/{${COMPANY},${USER},other}
