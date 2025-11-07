@@ -1,6 +1,6 @@
 # Testing the bash scripts
 
-This document describe how you can test in an easy way the diffrent customization scripts of this project before you decide to install them natively in your machine.
+This document describe how you can test in an easy way the different customization scripts of this project before you decide to install them natively in your machine.
 
 There are two options regarding if you want to customize your:
 - Linux System: Install packages, extender terminal functions, environment variables, etc...
