@@ -61,8 +61,8 @@ done
 #
 # Set the default icon back:
 #   gio set $DIRECTORY -t unset metadata::custom-icon
-#   gio set "${HOME}/Documents/Nextcloud" -t unset metadata::custom-icon
+#   gio set "${HOME}/Documents/Mega" -t unset metadata::custom-icon
 
-#echo "${HOME}/Documents/Nextcloud"
-#echo "${DESTINATION_DIR}/Nextcloud_directory.png"
-gio set -t string "${HOME}/Documents/Nextcloud" metadata::custom-icon "file://${DESTINATION_DIR}/Nextcloud_directory.png"
+#echo "${HOME}/Documents/Mega"
+#echo "${DESTINATION_DIR}/Mega-nz.png"
+gio set -t string "${HOME}/Documents/Mega" metadata::custom-icon "file://${DESTINATION_DIR}/Mega-nz.png"
