@@ -1,12 +1,10 @@
-MyLiCuLa
+MyLiCuLa ( My Linux Customization Layer )
 ==========================================================================
-My Linux Custom Layer
 
-
-This project contains a customization layer for (Ubuntu) Linux that I install on top of the OS.
-By doing this I ensure homogeneicity on all my Linux devices. This ensures me that all of my
-Linux devices will have the same applications, packages, menus, custom utilities, configuration and
-much more.
+This project is a customization layer for (Ubuntu) Linux that I install on top of the OS.
+By doing this I ensure homogeneity on all my Linux devices, all of my Linux devices will have the same 
+applications, packages, menus, custom utilities, configuration and much more. I will never have to 
+manually install packages or tools when I switch from one device to another.
 
 The entire idea of creating this project is to automatize the ideas exposed in the article [General Conventions](/home/francisco/git/francisco/franciscoguemes.com/mdwiki/entries/setup/General%20Conventions.md)
 
