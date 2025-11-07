@@ -1,28 +1,34 @@
-#!/bin/bash
+#!/usr/bin/env bash
+####################################################################################################
+#Args           : None - This script does not accept command-line arguments.
+#                 Uses environment variables from install.sh:
+#                   MYLICULA_USERNAME - Username for customization
+#                   MYLICULA_EMAIL - Email address
+#                   MYLICULA_COMPANY - Company/organization name
+#                   DRY_RUN - If "true", preview changes only
+#                   VERBOSE - If "true", show detailed output
+#Usage          :   ./customize/linux_setup.sh
+#                   Called by install.sh - not typically run directly.
+#                   Can be run standalone to apply generic Linux customizations.
+#Output stdout  :   Progress messages for each customization script executed.
+#                   Configuration details when VERBOSE=true.
+#                   Success/failure summary after all scripts complete.
+#Output stderr  :   Error messages if customizations fail.
+#Return code    :   0 on success, non-zero if any customization fails.
+#Description	: Orchestrator for generic Linux customizations.
+#                 Runs all customization scripts in the linux/ subdirectory in a controlled sequence.
+#                 Executes scripts alphabetically and reports on success/failure.
+#                 Sources common utilities from lib/common.sh if available.
 #
-# Script Name: linux_setup.sh
-# Description: Orchestrator for generic Linux customizations
-#              Runs all customization scripts in the linux/ subdirectory
-#              in a controlled sequence
-#
-# Args: None (uses environment variables from install.sh)
-#
-# Usage: Called by install.sh - not typically run directly
-#        Can be run standalone: ./customize/linux_setup.sh
-#
-# Output (stdout): Progress messages for each customization
-# Output (stderr): Error messages if customizations fail
-# Return code: 0 on success, non-zero if any customization fails
-#
-# Author: MyLiCuLa Project
-# See also: customize/ubuntu_setup.sh, install.sh
-#
-# Environment variables expected:
-#   MYLICULA_USERNAME - Username for customization
-#   MYLICULA_EMAIL - Email address
-#   MYLICULA_COMPANY - Company/organization name
-#   DRY_RUN - If "true", preview changes only
-#   VERBOSE - If "true", show detailed output
+#Author       	: Francisco Güemes
+#Email         	: francisco@franciscoguemes.com
+#See also	    : https://stackoverflow.com/questions/14008125/shell-script-common-template
+#                 https://devhints.io/bash
+#                 https://linuxhint.com/30_bash_script_examples/
+#                 https://stackoverflow.com/questions/192249/how-do-i-parse-command-line-arguments-in-bash
+#                 customize/ubuntu_setup.sh
+#                 install.sh
+####################################################################################################
 
 set -euo pipefail
 

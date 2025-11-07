@@ -1,18 +1,24 @@
 #!/usr/bin/env bash
 ####################################################################################################
-#Script Name	: install_templates.sh                                                                                             
+#Args           : None - This script does not accept any arguments.
+#Usage          :   ./install_templates.sh
+#                   Run this script to install templates for Nautilus "New Document" menu.
+#                   Script must be run from its installation directory to locate resources/templates.
+#Output stdout  :   Messages indicating broken links deletion and template installation progress.
+#Output stderr  :   Error messages if template operations fail.
+#Return code    :   0 on success, non-zero on error.
 #Description	: This script installs the templates in Ubuntu so when you do right click inside Nautilus
 #                 and you select "New Document" you can see the different options.
 #
 #                 The script basically takes the scripts from the "templates" folder and creates symbolic
-#                 links inside the foldre ~/Templates.
-#                                                                                 
-#Args           :                                                                                           
-#Author       	: Francisco Güemes                                                
-#Email         	: francisco@franciscoguemes.com                                           
-#See also	    : https://devhints.io/bash
+#                 links inside the folder ~/Templates.
+#
+#Author       	: Francisco Güemes
+#Email         	: francisco@franciscoguemes.com
+#See also	    : https://stackoverflow.com/questions/14008125/shell-script-common-template
+#                 https://devhints.io/bash
 #                 https://linuxhint.com/30_bash_script_examples/
-#                 https://stackoverflow.com/questions/192249/how-do-i-parse-command-line-arguments-in-bash  
+#                 https://stackoverflow.com/questions/192249/how-do-i-parse-command-line-arguments-in-bash
 ####################################################################################################
 
 # set -ex

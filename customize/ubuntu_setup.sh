@@ -1,28 +1,35 @@
-#!/bin/bash
+#!/usr/bin/env bash
+####################################################################################################
+#Args           : None - This script does not accept command-line arguments.
+#                 Uses environment variables from install.sh:
+#                   MYLICULA_USERNAME - Username for customization
+#                   MYLICULA_EMAIL - Email address
+#                   MYLICULA_COMPANY - Company/organization name
+#                   DRY_RUN - If "true", preview changes only
+#                   VERBOSE - If "true", show detailed output
+#Usage          :   ./customize/ubuntu_setup.sh
+#                   Called by install.sh - not typically run directly.
+#                   Can be run standalone to apply Ubuntu-specific customizations.
+#Output stdout  :   Progress messages for each customization script executed.
+#                   Configuration details when VERBOSE=true.
+#                   Success/failure summary after all scripts complete.
+#Output stderr  :   Error messages if customizations fail.
+#Return code    :   0 on success, non-zero if any customization fails.
+#Description	: Orchestrator for Ubuntu-specific customizations.
+#                 Runs all customization scripts in the ubuntu/ subdirectory in a controlled sequence,
+#                 including scripts in the non_standard_installations/ subdirectory.
+#                 Executes main Ubuntu scripts first, then non-standard installations.
+#                 All scripts run alphabetically. Sources common utilities from lib/common.sh if available.
 #
-# Script Name: ubuntu_setup.sh
-# Description: Orchestrator for Ubuntu-specific customizations
-#              Runs all customization scripts in the ubuntu/ subdirectory
-#              in a controlled sequence, including non_standard_installations
-#
-# Args: None (uses environment variables from install.sh)
-#
-# Usage: Called by install.sh - not typically run directly
-#        Can be run standalone: ./customize/ubuntu_setup.sh
-#
-# Output (stdout): Progress messages for each customization
-# Output (stderr): Error messages if customizations fail
-# Return code: 0 on success, non-zero if any customization fails
-#
-# Author: MyLiCuLa Project
-# See also: customize/linux_setup.sh, install.sh
-#
-# Environment variables expected:
-#   MYLICULA_USERNAME - Username for customization
-#   MYLICULA_EMAIL - Email address
-#   MYLICULA_COMPANY - Company/organization name
-#   DRY_RUN - If "true", preview changes only
-#   VERBOSE - If "true", show detailed output
+#Author       	: Francisco Güemes
+#Email         	: francisco@franciscoguemes.com
+#See also	    : https://stackoverflow.com/questions/14008125/shell-script-common-template
+#                 https://devhints.io/bash
+#                 https://linuxhint.com/30_bash_script_examples/
+#                 https://stackoverflow.com/questions/192249/how-do-i-parse-command-line-arguments-in-bash
+#                 customize/linux_setup.sh
+#                 install.sh
+####################################################################################################
 
 set -euo pipefail
 
