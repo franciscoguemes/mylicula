@@ -102,3 +102,12 @@ nb-configuration.xml
 *.zip
 *.tar.gz
 *.rar
+
+##############################
+## MyLiCuLa
+##############################
+# Dry-run preview directory
+.target/
+
+# Note: Actual user config is stored at ~/.config/mylicula/mylicula.conf
+#       (outside this repository, not tracked by git)
