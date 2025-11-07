@@ -39,17 +39,37 @@ ICONS_DIR=${SCRIPT_DIR}/resources/images/icons
 # Create symbolic links to the icons
 #-----------------------------------------------------------------------------
 #TODO: Move this to a function
-#TODO: Make this functionality bulletproof `ln -s kk kk` to Too many levels of symbolic links
 echo "Installing icons..."
 for f in ${ICONS_DIR}/*
 do
-  FILE_NAME=$(basename $f)
+  FILE_NAME=$(basename "$f")
+  LINK_PATH="${DESTINATION_DIR}/${FILE_NAME}"
+
   echo "    ${FILE_NAME}"
-  LINK=${DESTINATION_DIR}/${FILE_NAME}
-#   if [[ -f ${LINK} ]]; then
-#     rm -f ${LINK}
-#   fi
-  ln -fs $f ${LINK}
+
+  # Check if link already exists
+  if [[ -L "${LINK_PATH}" ]]; then
+    # Link exists - verify it points to correct target
+    CURRENT_TARGET=$(readlink "${LINK_PATH}")
+    if [[ "${CURRENT_TARGET}" == "$f" ]]; then
+      echo "        [SKIP] Link already points to correct target"
+      continue
+    else
+      echo "        [UPDATE] Link points to wrong target, updating..."
+      rm -f "${LINK_PATH}"
+    fi
+  elif [[ -e "${LINK_PATH}" ]]; then
+    # File/directory exists but is not a symlink
+    echo "        [ERROR] ${FILE_NAME} exists but is not a symlink, skipping..." >&2
+    continue
+  fi
+
+  # Create the symlink
+  if ln -s "$f" "${LINK_PATH}"; then
+    echo "        [OK] Link created successfully"
+  else
+    echo "        [ERROR] Failed to create link" >&2
+  fi
 done
 
 
