@@ -51,6 +51,11 @@ mylicula/
 │   └── ubuntu/            # Ubuntu scripts in review
 ├── lib/                   # Shared utility libraries
 │   └── common.sh          # Common functions (logging, prompts, interpolation)
+├── tests/                 # Automated test suite (BATS framework)
+│   ├── test_*.bats        # Unit test files
+│   ├── install_bats.sh    # BATS installation script
+│   ├── run_tests.sh       # Test runner
+│   └── README.md          # Testing documentation
 ├── install.sh             # Main interactive installation script
 ├── mylicula.conf.example  # Configuration blueprint with example values
 ├── README.md              # This file
@@ -70,6 +75,11 @@ mylicula/
 
 **`lib/`** - Shared utility functions
 - `common.sh` - Logging, prompts, file operations, interpolation system
+
+**`tests/`** - Automated unit testing with BATS framework
+- `test_*.bats` - Unit test files for functions
+- `install_bats.sh` - BATS installation script
+- `run_tests.sh` - Test runner with multiple options
 
 ## Configuration System
 
@@ -335,20 +345,50 @@ The common library provides utility functions used across all scripts:
 
 ## Testing
 
-See `Testing.md` for detailed testing guidelines.
+MyLiCuLa includes comprehensive testing at multiple levels. See `Testing.md` for complete testing guidelines.
 
-### Quick Testing
+### Unit Tests (BATS)
+
+Automated unit tests for individual functions using BATS (Bash Automated Testing System):
+
+```bash
+# Install BATS testing framework
+./tests/install_bats.sh
+
+# Run all unit tests
+./tests/run_tests.sh
+
+# Run specific test file
+./tests/run_tests.sh test_common_create_symlink.bats
+
+# Run with verbose output
+./tests/run_tests.sh --verbose
+
+# Run with timing information
+./tests/run_tests.sh --timing
+```
+
+**Current Coverage:**
+- `create_symlink()` function: 20 test cases covering all edge cases
+- Circular reference detection
+- Idempotency validation
+- Data protection checks
+
+### Integration Tests
 
 ```bash
 # Syntax check all scripts
 bash -n customize/**/*.sh
 bash -n in_review/**/*.sh
 
-# Dry-run test
+# Dry-run test (preview changes)
 ./install.sh --dry-run
 
 # Verbose test
 ./install.sh --dry-run --verbose
+
+# Full integration test in VM/Docker
+# See Testing.md for Docker and VM setup
 ```
 
 ## Contributing
