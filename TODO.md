@@ -1,6 +1,14 @@
 TODOs
 ===============================================================
 
+## Scripts to Implement
+
+ - [ ] Create SSH keys script (in_review/linux/create_ssh_keys.sh) - Generate SSH keys for code repositories automatically
+ - [ ] Install bash scripts (in_review/linux/install_bash_scripts.sh) - Deploy custom bash scripts to ~/bin
+ - [ ] Install packages script (in_review/ubuntu/install_packages.sh) - Read from resources/apt/list_of_packages.txt and install
+
+## Installation Process
+
  - [ ] Create a script that triggers the entire installation process
  - [ ] The installation script must ask the user if he works in a company, if the user say yes, then the script must ask 
        for the name of the company and store the answer in the OS variable `COMPANY`. If the user do not work in a company
@@ -114,38 +122,7 @@ TODOs
  - https://stackoverflow.com/questions/6482377/check-existence-of-input-argument-in-a-bash-shell-script
 
 
- # Enrich the documentation with plantuml diagrams
-
-Below you have some examples:
-
-```plantuml
-@startuml
-:User: --> (Use)
-"Main Admin" as Admin
-"Use the application" as (Use)
-Admin --> (Admin the application)
-@enduml
-```
-
-
-```plantuml
-@startwbs
-* Business Process Modelling WBS
-** Launch the project
-*** Complete Stakeholder Research
-*** Initial Implementation Plan
-** Design phase
-*** Model of AsIs Processes Completed
-**** Model of AsIs Processes Completed1
-**** Model of AsIs Processes Completed2
-*** Measure AsIs performance metrics
-*** Identify Quick Wins
-** Complete innovate phase
-@endwbs
-```
-
-Source:
- - [Diagrams with plantuml](https://blog.anoff.io/2018-07-31-diagrams-with-plantuml/)
+ # Enrich the documentation with Mermaid diagrams
 
 
 
