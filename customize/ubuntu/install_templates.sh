@@ -45,8 +45,32 @@ done
 echo "Installing templates..."
 for f in $TEMPLATES_DIR/*
 do
-  echo "    `basename $f`"
-  #TODO: Check if the link already existes
-  #       if it exists check if the destination is the same
-  ln -s $f $DESTINATION_DIR/
+  TEMPLATE_NAME=$(basename "$f")
+  LINK_PATH="${DESTINATION_DIR}/${TEMPLATE_NAME}"
+
+  echo "    ${TEMPLATE_NAME}"
+
+  # Check if link already exists
+  if [[ -L "${LINK_PATH}" ]]; then
+    # Link exists - verify it points to correct target
+    CURRENT_TARGET=$(readlink "${LINK_PATH}")
+    if [[ "${CURRENT_TARGET}" == "$f" ]]; then
+      echo "        [SKIP] Link already points to correct target"
+      continue
+    else
+      echo "        [UPDATE] Link points to wrong target, updating..."
+      rm -f "${LINK_PATH}"
+    fi
+  elif [[ -e "${LINK_PATH}" ]]; then
+    # File/directory exists but is not a symlink
+    echo "        [ERROR] ${TEMPLATE_NAME} exists but is not a symlink, skipping..." >&2
+    continue
+  fi
+
+  # Create the symlink
+  if ln -s "$f" "${LINK_PATH}"; then
+    echo "        [OK] Link created successfully"
+  else
+    echo "        [ERROR] Failed to create link" >&2
+  fi
 done
