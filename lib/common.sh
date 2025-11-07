@@ -258,14 +258,24 @@ backup_file() {
 
 #
 # Function: create_symlink
-# Description: Create a symbolic link, checking if target exists (idempotent)
+# Description: Create a symbolic link with comprehensive validation (idempotent and bulletproof)
+#
+# Performs the following checks:
+#   - Verifies source file/directory exists
+#   - Detects and prevents direct circular references (link -> link)
+#   - Detects and prevents indirect circular references (link -> a -> b -> link)
+#   - Validates existing symlinks point to correct target
+#   - Protects against overwriting non-symlink files
+#   - Detects excessive symlink chain depth (potential loops)
+#   - Creates parent directories as needed
+#
 # Args:
 #   $1 - Source file (what the link points to)
 #   $2 - Link name (the symlink to create)
 #   $3 - Verbose output (optional, "verbose" for detailed feedback)
 # Usage: create_symlink "/usr/local/bin/app" "$HOME/bin/app"
 #        create_symlink "/path/to/source" "$HOME/link" "verbose"
-# Output (stdout): Status messages
+# Output (stdout): Status messages ([OK], [SKIP], [UPDATE], [ERROR])
 # Output (stderr): Error messages if applicable
 # Return code: 0 on success, 1 on error, 2 on skip
 #
@@ -274,6 +284,10 @@ create_symlink() {
     local link=$2
     local verbose_mode=${3:-}
 
+    # Normalize paths to absolute for comparison
+    local abs_link
+    abs_link=$(cd -P "$(dirname "$link")" 2>/dev/null && pwd)/$(basename "$link") || abs_link="$link"
+
     # Check if source exists
     if [[ ! -e "$source" ]]; then
         if [[ "$verbose_mode" == "verbose" ]]; then
@@ -281,6 +295,64 @@ create_symlink() {
         fi
         log_error "Cannot create symlink: source '$source' does not exist"
         return 1
+    fi
+
+    # Detect direct circular reference (link points to itself)
+    local abs_source
+    abs_source=$(cd -P "$(dirname "$source")" 2>/dev/null && pwd)/$(basename "$source") || abs_source="$source"
+
+    if [[ "$abs_source" == "$abs_link" ]]; then
+        if [[ "$verbose_mode" == "verbose" ]]; then
+            echo "        [ERROR] Circular reference detected: link would point to itself" >&2
+        fi
+        log_error "Cannot create symlink: circular reference detected ($source -> $link)"
+        return 1
+    fi
+
+    # Detect indirect circular reference by following symlink chain
+    if [[ -L "$source" ]]; then
+        local check_path="$source"
+        local max_depth=40  # Linux default MAXSYMLINKS is 40
+        local depth=0
+
+        while [[ -L "$check_path" ]] && [[ $depth -lt $max_depth ]]; do
+            local target
+            target=$(readlink "$check_path")
+
+            # Convert relative path to absolute
+            if [[ "$target" != /* ]]; then
+                target="$(cd -P "$(dirname "$check_path")" 2>/dev/null && pwd)/$target"
+            fi
+
+            # Normalize the target path
+            local abs_target
+            if [[ -e "$target" ]]; then
+                abs_target=$(cd -P "$(dirname "$target")" 2>/dev/null && pwd)/$(basename "$target")
+            else
+                abs_target="$target"
+            fi
+
+            # Check if target points back to the link we're creating
+            if [[ "$abs_target" == "$abs_link" ]]; then
+                if [[ "$verbose_mode" == "verbose" ]]; then
+                    echo "        [ERROR] Circular reference detected in symlink chain" >&2
+                fi
+                log_error "Cannot create symlink: circular reference in chain ($source -> ... -> $link)"
+                return 1
+            fi
+
+            check_path="$target"
+            ((depth++))
+        done
+
+        # Check if we hit max depth (too many symlinks)
+        if [[ $depth -ge $max_depth ]]; then
+            if [[ "$verbose_mode" == "verbose" ]]; then
+                echo "        [ERROR] Too many levels of symbolic links in source" >&2
+            fi
+            log_error "Cannot create symlink: source has too many symlink levels (possible loop)"
+            return 1
+        fi
     fi
 
     # If link already exists and points to correct location
