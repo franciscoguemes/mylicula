@@ -262,31 +262,54 @@ backup_file() {
 # Args:
 #   $1 - Source file (what the link points to)
 #   $2 - Link name (the symlink to create)
+#   $3 - Verbose output (optional, "verbose" for detailed feedback)
 # Usage: create_symlink "/usr/local/bin/app" "$HOME/bin/app"
-# Output (stdout): None
+#        create_symlink "/path/to/source" "$HOME/link" "verbose"
+# Output (stdout): Status messages
 # Output (stderr): Error messages if applicable
-# Return code: 0 on success
+# Return code: 0 on success, 1 on error, 2 on skip
 #
 create_symlink() {
     local source=$1
     local link=$2
+    local verbose_mode=${3:-}
 
     # Check if source exists
     if [[ ! -e "$source" ]]; then
+        if [[ "$verbose_mode" == "verbose" ]]; then
+            echo "        [ERROR] Source does not exist: $source" >&2
+        fi
         log_error "Cannot create symlink: source '$source' does not exist"
         return 1
     fi
 
     # If link already exists and points to correct location
-    if [[ -L "$link" && "$(readlink "$link")" == "$source" ]]; then
-        [[ "$VERBOSE" == "true" ]] && log_info "Symlink already correct: $link -> $source"
-        return 0
-    fi
-
-    # If link exists but is wrong or is a regular file
-    if [[ -e "$link" || -L "$link" ]]; then
-        log_warning "Removing existing: $link"
-        rm -f "$link"
+    if [[ -L "$link" ]]; then
+        local current_target
+        current_target=$(readlink "$link")
+        if [[ "$current_target" == "$source" ]]; then
+            if [[ "$verbose_mode" == "verbose" ]]; then
+                echo "        [SKIP] Link already points to correct target"
+            elif [[ "$VERBOSE" == "true" ]]; then
+                log_info "Symlink already correct: $link -> $source"
+            fi
+            return 2  # Return 2 to indicate "skipped"
+        else
+            if [[ "$verbose_mode" == "verbose" ]]; then
+                echo "        [UPDATE] Link points to wrong target, updating..."
+            else
+                log_warning "Updating symlink: $link"
+            fi
+            rm -f "$link"
+        fi
+    elif [[ -e "$link" ]]; then
+        # File/directory exists but is not a symlink
+        if [[ "$verbose_mode" == "verbose" ]]; then
+            echo "        [ERROR] $(basename "$link") exists but is not a symlink, skipping..." >&2
+        else
+            log_warning "File exists and is not a symlink, skipping: $link"
+        fi
+        return 1
     fi
 
     # Create directory if needed
@@ -295,8 +318,66 @@ create_symlink() {
     mkdir -p "$link_dir"
 
     # Create the symlink
-    ln -s "$source" "$link"
-    log_success "Created symlink: $link -> $source"
+    if ln -s "$source" "$link"; then
+        if [[ "$verbose_mode" == "verbose" ]]; then
+            echo "        [OK] Link created successfully"
+        else
+            log_success "Created symlink: $link -> $source"
+        fi
+        return 0
+    else
+        if [[ "$verbose_mode" == "verbose" ]]; then
+            echo "        [ERROR] Failed to create link" >&2
+        else
+            log_error "Failed to create symlink: $link"
+        fi
+        return 1
+    fi
+}
+
+#
+# Function: remove_broken_links
+# Description: Remove all broken symbolic links from a directory
+# Args:
+#   $1 - Directory path to search
+#   $2 - Verbose output (optional, "verbose" for detailed feedback)
+# Usage: remove_broken_links "$HOME/Templates"
+#        remove_broken_links "$HOME/Templates" "verbose"
+# Output (stdout): Messages about broken links removed
+# Output (stderr): None
+# Return code: 0 on success
+#
+remove_broken_links() {
+    local directory=$1
+    local verbose_mode=${2:-}
+
+    if [[ ! -d "$directory" ]]; then
+        log_warning "Directory not found: $directory"
+        return 0
+    fi
+
+    if [[ "$verbose_mode" == "verbose" ]]; then
+        echo "Deleting broken links..."
+    fi
+
+    # Find and remove broken symbolic links
+    local broken_links
+    broken_links=$(find "$directory" -xtype l 2>/dev/null)
+
+    if [[ -n "$broken_links" ]]; then
+        while IFS= read -r link; do
+            if [[ "$verbose_mode" == "verbose" ]]; then
+                echo "    $link"
+            elif [[ "$VERBOSE" == "true" ]]; then
+                log_info "Removing broken link: $link"
+            fi
+            rm -f "$link"
+        done <<< "$broken_links"
+    else
+        if [[ "$verbose_mode" == "verbose" ]]; then
+            echo "    No broken links found"
+        fi
+    fi
 }
 
 #

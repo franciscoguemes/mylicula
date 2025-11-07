@@ -21,56 +21,36 @@
 #                 https://stackoverflow.com/questions/192249/how-do-i-parse-command-line-arguments-in-bash
 ####################################################################################################
 
-# set -ex
-
-DESTINATION_DIR=$HOME/Templates
-
 # Get the directory where this script is placed
-#   https://stackoverflow.com/a/246128
 SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+BASE_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")"
 
+# Source common utilities
+if [[ -f "${BASE_DIR}/lib/common.sh" ]]; then
+    # shellcheck disable=SC1091
+    source "${BASE_DIR}/lib/common.sh"
+else
+    echo "ERROR: Cannot find lib/common.sh" >&2
+    exit 1
+fi
+
+# Configuration
+DESTINATION_DIR=$HOME/Templates
 TEMPLATES_DIR=$SCRIPT_DIR/resources/templates
 
-#TODO: Move this to a function
-#TODO: Make this functionality bulletproof `ln -s kk kk` to Too many levels of symbolic links
-echo "Deleting broken links..."
-BROKEN_LINKS=`find $DESTINATION_DIR -xtype l`
-for f in $BROKEN_LINKS
-do
-  echo "    $f"
-  rm $f
-done
+# Ensure destination directory exists
+mkdir -p "$DESTINATION_DIR"
 
-#TODO: Move this to a function
+# Remove broken symbolic links
+remove_broken_links "$DESTINATION_DIR" "verbose"
+
+# Install templates by creating symbolic links
 echo "Installing templates..."
-for f in $TEMPLATES_DIR/*
+for f in "$TEMPLATES_DIR"/*
 do
   TEMPLATE_NAME=$(basename "$f")
   LINK_PATH="${DESTINATION_DIR}/${TEMPLATE_NAME}"
 
   echo "    ${TEMPLATE_NAME}"
-
-  # Check if link already exists
-  if [[ -L "${LINK_PATH}" ]]; then
-    # Link exists - verify it points to correct target
-    CURRENT_TARGET=$(readlink "${LINK_PATH}")
-    if [[ "${CURRENT_TARGET}" == "$f" ]]; then
-      echo "        [SKIP] Link already points to correct target"
-      continue
-    else
-      echo "        [UPDATE] Link points to wrong target, updating..."
-      rm -f "${LINK_PATH}"
-    fi
-  elif [[ -e "${LINK_PATH}" ]]; then
-    # File/directory exists but is not a symlink
-    echo "        [ERROR] ${TEMPLATE_NAME} exists but is not a symlink, skipping..." >&2
-    continue
-  fi
-
-  # Create the symlink
-  if ln -s "$f" "${LINK_PATH}"; then
-    echo "        [OK] Link created successfully"
-  else
-    echo "        [ERROR] Failed to create link" >&2
-  fi
+  create_symlink "$f" "$LINK_PATH" "verbose"
 done
