@@ -1,101 +1,477 @@
-MyLiCuLa ( My Linux Customization Layer )
+MyLiCuLa (My Linux Customization Layer)
 ==========================================================================
 
-This project is a customization layer for (Ubuntu) Linux that I install on top of the OS.
-By doing this I ensure homogeneity on all my Linux devices, all of my Linux devices will have the same 
-applications, packages, menus, custom utilities, configuration and much more. I will never have to 
-manually install packages or tools when I switch from one device to another.
+A customization layer for Ubuntu Linux that automates system setup to ensure homogeneity across all your Linux devices. Install once, replicate everywhere.
 
-The entire idea of creating this project is to automatize the ideas exposed in the article [General Conventions](/home/francisco/git/francisco/franciscoguemes.com/mdwiki/entries/setup/General%20Conventions.md)
+## Overview
 
+MyLiCuLa automatically installs and configures:
+- Applications and packages
+- Custom utilities and scripts
+- Shell functions and environment variables
+- UI customizations and templates
+- Development tools and non-standard installations
 
-# Usage
-This project takes as starting that the user has followed [these manual steps](https://mdwiki.franciscoguemes.com/#!NEW.md) in the new computer.
+The entire idea is to automate the concepts from [General Conventions](/home/francisco/git/francisco/franciscoguemes.com/mdwiki/entries/setup/General%20Conventions.md), ensuring you never have to manually set up a new Linux machine again.
 
-
-# Structure of the project
-
-The project is structured in the following directories:
+## Quick Start
 
 ```bash
-tree -L 2 .
-.
-├── customize
-│   ├── linux
-│   └── ubuntu
-├── in_review
-│   ├── git
-│   ├── linux
-│   ├── linux_setup.sh
-│   ├── ubuntu
-│   └── ubuntu_setup.sh
-├── install.sh
-├── LICENSE
-├── README.md
-├── Testing.md
-└── TODO.md
+# Clone the repository
+git clone https://github.com/franciscoguemes/mylicula.git
+cd mylicula
+
+# Run the installer
+./install.sh
+
+# Or preview changes first (dry-run mode)
+./install.sh --dry-run
+
+# Or run with verbose output
+./install.sh --verbose
 ```
 
-In the root directory there is a `install.sh` script that will install the entire customization layer in your 
-machine. It is an interactive scritp that will ask you a few questions.
+On first run, the installer will ask for your information (name, email, company) and save it to `~/.config/mylicula/mylicula.conf` for future runs.
 
-The scripts under the _customize_ directory are the ones designated to transform your OS in order to get a similar setup than the one I have in all my machines. In other words you can get the same Ubuntu customization (UI, extra menu options, etc..) and the same Linux customization (Installed packages, extended terminal functions, environment variables, etc...). Inside the _customize_ directory there are the scripts _linux_setup.sh_ and _ubuntu_setup.sh_ to install the respective customizations.
+## Project Structure
 
-The scripts under the *in_review* directory are scripts that are not yet production ready and therefore they need more refinement and testing.
+```bash
+mylicula/
+├── customize/              # Production-ready customization scripts
+│   ├── linux/             # Generic Linux customizations
+│   │   └── *.sh           # Individual customization scripts
+│   ├── ubuntu/            # Ubuntu-specific customizations
+│   │   ├── *.sh           # Main customization scripts
+│   │   ├── non_standard_installations/  # Special installations (GitHub CLI, etc.)
+│   │   └── resources/     # Icons, templates, config files
+│   ├── linux_setup.sh     # Orchestrates generic Linux customizations
+│   └── ubuntu_setup.sh    # Orchestrates Ubuntu-specific customizations
+├── in_review/             # Scripts under development/testing
+│   ├── linux/             # Linux scripts in review
+│   └── ubuntu/            # Ubuntu scripts in review
+├── lib/                   # Shared utility libraries
+│   └── common.sh          # Common functions (logging, prompts, interpolation)
+├── install.sh             # Main interactive installation script
+├── mylicula.conf.example  # Configuration blueprint with example values
+├── README.md              # This file
+├── Testing.md             # Testing guidelines
+└── TODO.md                # Pending tasks and future enhancements
+```
 
+### Key Directories
+
+**`customize/`** - Production-ready scripts that are executed during installation
+- `linux/` - Generic customizations that work on any Linux distribution
+- `ubuntu/` - Ubuntu-specific customizations (UI, PPA repos, etc.)
+
+**`in_review/`** - Staging area for scripts under development
+- Scripts are tested here before promotion to `customize/`
+- Not executed during normal installation
+
+**`lib/`** - Shared utility functions
+- `common.sh` - Logging, prompts, file operations, interpolation system
+
+## Configuration System
+
+### User Configuration
+
+On first run, `install.sh` creates `~/.config/mylicula/mylicula.conf` with your settings:
+
+```bash
+~/.config/mylicula/mylicula.conf    # Your actual config (DO NOT commit!)
+```
+
+This file contains:
+- User information (username, email, full name)
+- Company/organization name
+- GitHub username
+- **Future: Secrets like GitHub tokens, API keys**
+
+**IMPORTANT:** This file may contain secrets and should NEVER be committed to version control!
+
+### Configuration Blueprint
+
+The repository includes `mylicula.conf.example` as a blueprint:
+- Shows all available configuration options
+- Contains example values
+- Safe to commit (no real secrets)
+
+### Configuration Priority
+
+Values are loaded in this order (first found wins):
+1. `~/.config/mylicula/mylicula.conf` (user's actual config)
+2. Environment variables (`MYLICULA_USERNAME`, `MYLICULA_EMAIL`, etc.)
+3. System defaults (`$USER`, git config, auto-detection)
+
+### Reconfiguration
+
+To reconfigure MyLiCuLa:
+```bash
+# Delete config and run installer again
+rm ~/.config/mylicula/mylicula.conf
+./install.sh
+
+# Or edit the config file directly
+nano ~/.config/mylicula/mylicula.conf
+```
+
+## Installation Process
+
+When you run `./install.sh`, it:
+
+1. **Checks Requirements** - Verifies Bash 4.0+, Linux OS, Ubuntu version
+2. **Collects Configuration** - Asks for your info or loads from `~/.config/mylicula/mylicula.conf`
+3. **Saves Configuration** - Stores settings for future runs
+4. **Runs Generic Linux Customizations** - Executes all `customize/linux/*.sh` scripts
+5. **Runs Ubuntu Customizations** - Executes all `customize/ubuntu/*.sh` scripts
+6. **Runs Non-Standard Installations** - Installs special tools (GitHub CLI, etc.)
+7. **Reports Results** - Shows what succeeded/failed
+
+### Installation Options
+
+```bash
+./install.sh            # Normal installation
+./install.sh --help     # Show help message
+./install.sh --dry-run  # Preview changes without applying them
+./install.sh --verbose  # Show detailed output
+```
+
+### Dry-Run Mode
+
+When using `--dry-run`, MyLiCuLa creates `.target/` directory showing what would be installed:
+
+```bash
+./install.sh --dry-run
+
+# Review what would change
+cd .target
+find . -type f                    # List all files that would be modified
+cat home/francisco/.bashrc        # Preview .bashrc changes
+```
+
+The `.target/` directory mirrors your actual filesystem, letting you safely preview all changes before applying them.
+
+## Interpolation System
+
+Scripts can use placeholders that are replaced with your actual configuration during installation:
+
+```bash
+# In a script template:
+AUTHOR_NAME="<<<FULL_NAME>>>"
+AUTHOR_EMAIL="<<<EMAIL>>>"
+COMPANY="<<<COMPANY>>>"
+GITHUB_USER="<<<GITHUB_USER>>>"
+```
+
+During installation, these become:
+```bash
+AUTHOR_NAME="Francisco Guemes"
+AUTHOR_EMAIL="francisco@franciscoguemes.com"
+COMPANY="Personal"
+GITHUB_USER="franciscoguemes"
+```
+
+Available interpolation keys:
+- `<<<USERNAME>>>` - System username
+- `<<<EMAIL>>>` - Email address
+- `<<<FULL_NAME>>>` - Full name
+- `<<<COMPANY>>>` - Company/organization
+- `<<<GITHUB_USER>>>` - GitHub username
+- `<<<HOME>>>` - Home directory path
+- `<<<USER>>>` - Current user
 
 ## Requirements
 
-The scripts are coded in:
- - [Bash](https://www.gnu.org/software/bash/) 4.X or above
- - [Python](https://www.python.org/) 3.X or above
+### System Requirements
+- **OS:** Ubuntu Linux (tested on 22.04)
+  - Generic scripts work on any Linux distribution
+  - Ubuntu-specific scripts require Ubuntu
+- **Bash:** 4.0 or higher
+- **Python:** 3.x (for Python-based customizations)
+- **Git:** For cloning repositories and version control
 
+### Check Your Versions
 
-You can check which version of bash you have installed in your system by using any of the two commands below:
 ```bash
-# General way of checking your bash version
+# Check Bash version
 bash --version
-# Get only bash version number
 echo "${BASH_VERSION}"
-```
 
-In the case of Python you can check your installed versions by typing:
-```bash
-# For python 2.X versions
-python --version
-# For python 3.X versions
+# Check Python version
 python3 --version
+
+# Check Ubuntu version (if on Ubuntu)
+lsb_release -a
 ```
 
-## Colaborating with the project
+## Development Workflow
 
-Fell free to colaborate with the project creating a fork of this project and customizing it for your favourite Linux distribution or sugesting new ideas, scripts and customizations for the generic Linux part or the Ubuntu customization.
+### Creating New Scripts
 
-As any other project there are some rules and standards that I followed when created the project.
+1. **Decide Scope** - Generic Linux (`customize/linux/`) or Ubuntu-specific (`customize/ubuntu/`)
+2. **Start in Review** - Create script in `in_review/linux/` or `in_review/ubuntu/`
+3. **Use Templates** - Follow conventions from existing scripts in `customize/`
+4. **Add Documentation** - Include header with description, args, usage, author
+5. **Make Executable** - `chmod +x your_script.sh`
+6. **Test Syntax** - `bash -n your_script.sh`
+7. **Test in Dry-Run** - Move to `customize/` and run `./install.sh --dry-run`
+8. **Promote to Production** - Once tested, keep in `customize/` and commit
 
-### New scripts
-In order to create new scripts, please use the templates located in the folder `templates` of this project and follow the conventions shown in the template such as the documentation header, the documentation in the functions, the naming conventions for global variables, etc...
+### Script Conventions
+
+All scripts should follow these conventions:
+
+**1. Documentation Header:**
+```bash
+#!/bin/bash
+#
+# Script Name: install_something.sh
+# Description: What this script does
+#
+# Args:
+#   $1 - First argument description (if any)
+#
+# Usage: ./install_something.sh [options]
+#
+# Output (stdout): What gets printed to stdout
+# Output (stderr): What gets printed to stderr
+# Return code: 0 on success, non-zero on failure
+#
+# Author: Your Name
+# Email: your.email@example.com
+```
+
+**2. Error Handling:**
+```bash
+set -euo pipefail  # Exit on error, undefined vars, pipe failures
+```
+
+**3. Source Common Library:**
+```bash
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+BASE_DIR="$(cd "$SCRIPT_DIR/../.." &>/dev/null && pwd)"
+
+if [[ -f "${BASE_DIR}/lib/common.sh" ]]; then
+    source "${BASE_DIR}/lib/common.sh"
+fi
+```
+
+**4. Use Logging Functions:**
+```bash
+log_info "Installing package..."
+log_success "Installation complete"
+log_warning "Package already installed"
+log_error "Failed to install package"
+```
+
+**5. Idempotency:**
+Scripts should be safe to run multiple times:
+```bash
+# Check if already installed
+if command -v some_command &>/dev/null; then
+    log_info "Already installed, skipping"
+    return 0
+fi
+```
+
+**6. Function Documentation:**
+```bash
+#
+# Function: my_function
+# Description: What this function does
+# Args:
+#   $1 - First parameter description
+# Usage: my_function "param1"
+# Output (stdout): What it outputs
+# Return code: 0 on success, 1 on failure
+#
+my_function() {
+    # implementation
+}
+```
 
 ### TODOs
-The pending tasks will be marked with the _TODO:_ tag and then what is missing. 
+
+Mark incomplete work with TODO comments:
 ```bash
-TODO: Here a clear description of what is missing
+# TODO: Add error handling for network failures
+# TODO: Support other Linux distributions
 ```
 
-----
+Major TODOs should also be added to `TODO.md`.
 
-TODO: Review from here down...
+## Common Library (lib/common.sh)
 
-----
+The common library provides utility functions used across all scripts:
 
+### Logging
+- `log_info "message"` - Blue informational message
+- `log_success "message"` - Green success message
+- `log_warning "message"` - Yellow warning message
+- `log_error "message"` - Red error message (to stderr)
+- `die "message" [exit_code]` - Log error and exit
+
+### User Prompts
+- `prompt_user "Enter value"` - Prompt for input
+- `prompt_with_default "Enter value" "default"` - Prompt with default
+- `prompt_yes_no "Continue?" "y"` - Yes/no question
+
+### File Operations
+- `add_to_file_once "content" "file"` - Add if not exists (idempotent)
+- `backup_file "file"` - Create timestamped backup
+- `create_symlink "source" "link"` - Create symlink (idempotent)
+- `ensure_directory "path"` - Create directory if doesn't exist
 
 ### Interpolation
-All values that will be interpolated during the installation process must be in the format 
+- `interpolate_string "string"` - Replace <<<KEY>>> patterns
+- `interpolate_file "source" "dest"` - Interpolate entire file
+- `interpolate_directory "source" "dest"` - Interpolate all files in directory
+
+### System Detection
+- `command_exists "command"` - Check if command available
+- `is_ubuntu` - Returns 0 if running Ubuntu
+- `get_ubuntu_version` - Returns Ubuntu version (e.g., "22.04")
+- `get_script_dir` - Get directory of calling script
+
+## Testing
+
+See `Testing.md` for detailed testing guidelines.
+
+### Quick Testing
+
 ```bash
-<<<KEY_TO_INTERPOLATE>>>
+# Syntax check all scripts
+bash -n customize/**/*.sh
+bash -n in_review/**/*.sh
+
+# Dry-run test
+./install.sh --dry-run
+
+# Verbose test
+./install.sh --dry-run --verbose
 ```
 
-### Interpolation directory
-The interpolation directory will be `.target` inside the current directory.
+## Contributing
 
-During the installation process the files are copied to the directory `./.target` and then interpolated. So if you run the installation with the DryRun; inside this directory you can see the source scripts that would be installed in your computer.
+Contributions are welcome! Here's how to contribute:
+
+1. **Fork the Repository** - Create your own fork for your Linux distribution
+2. **Follow Conventions** - Use existing scripts as templates
+3. **Start in Review** - New scripts go in `in_review/`
+4. **Test Thoroughly** - Use dry-run mode and test on fresh system
+5. **Document** - Include clear documentation headers
+6. **Submit PR** - Once tested, submit a pull request
+
+### Contribution Ideas
+
+- Support for other Linux distributions (Fedora, Arch, etc.)
+- New customization scripts
+- Improved templates
+- Better error handling
+- Additional utility functions in `lib/common.sh`
+- CI/CD improvements
+
+## Project Status
+
+### ✅ Working Features (Phase 1 Complete)
+- Interactive installation with configuration collection
+- Configuration persistence in `~/.config/mylicula/`
+- Dry-run mode with `.target/` preview
+- Generic Linux and Ubuntu orchestration
+- Interpolation system for `<<<KEY>>>` patterns
+- Comprehensive common library with 30+ functions
+- Error handling and detailed logging
+- Icon installation
+- Terminal function installation (set-title)
+- File template system
+- Non-standard installations (GitHub CLI, PostgreSQL, etc.)
+
+### 🚧 In Development
+- Package installation from lists
+- SSH key generation
+- Custom bash scripts deployment
+- Additional non-standard installations
+
+### 📋 Planned Features
+- CI/CD testing with GitHub Actions
+- Docker-based testing environment
+- Support for additional Linux distributions
+- Man pages for scripts
+- PlantUML documentation diagrams
+- Secrets management (GitHub tokens, API keys)
+
+## Troubleshooting
+
+### Configuration Issues
+
+**Problem:** Need to reconfigure
+```bash
+rm ~/.config/mylicula/mylicula.conf
+./install.sh
+```
+
+**Problem:** Config file corrupted
+```bash
+cp mylicula.conf.example ~/.config/mylicula/mylicula.conf
+nano ~/.config/mylicula/mylicula.conf  # Edit with your values
+```
+
+### Installation Issues
+
+**Problem:** Script fails with "command not found"
+```bash
+# Check if required tools installed
+command -v git
+command -v bash
+bash --version  # Must be 4.0+
+```
+
+**Problem:** Permission denied
+```bash
+# Some scripts require sudo for system-wide changes
+# Others should run as regular user for ~/.config
+```
+
+**Problem:** Want to skip a script
+```bash
+# Temporarily move it out of customize/
+mv customize/ubuntu/problematic_script.sh in_review/ubuntu/
+./install.sh
+```
+
+### Debugging
+
+```bash
+# Run with verbose output
+./install.sh --verbose
+
+# Check syntax of specific script
+bash -n customize/linux/my_script.sh
+
+# Test script individually
+bash customize/linux/my_script.sh
+
+# Use dry-run to preview
+./install.sh --dry-run
+cd .target && tree  # Inspect what would change
+```
+
+## License
+
+See `LICENSE` file for details.
+
+## Author
+
+**Francisco Güemes**
+- Email: francisco@franciscoguemes.com
+- GitHub: [@franciscoguemes](https://github.com/franciscoguemes)
+
+## Links
+
+- [General Conventions (mdwiki)](https://mdwiki.franciscoguemes.com/)
+- [Manual Setup Steps](https://mdwiki.franciscoguemes.com/#!NEW.md)
+- [GitHub Repository](https://github.com/franciscoguemes/mylicula)
+
+---
+
+**Last Updated:** November 2024 - Phase 1 Complete
