@@ -22,3 +22,12 @@ appimagelauncher
 # PDF annotation and note-taking application
 # REPO: ppa:apandada1/xournalpp-stable
 xournalpp
+
+# GitHub CLI
+# Command-line tool for GitHub
+# https://cli.github.com/
+# https://github.com/cli/cli/blob/trunk/docs/install_linux.md
+# REPO: deb [signed-by=/usr/share/keyrings/githubcli-archive-keyring.gpg] https://cli.github.com/packages stable main
+# GPG: https://cli.github.com/packages/githubcli-archive-keyring.gpg
+# KEYRING: /usr/share/keyrings/githubcli-archive-keyring.gpg
+gh
