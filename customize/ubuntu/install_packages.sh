@@ -38,17 +38,20 @@
 #==================================================================================================
 readonly SCRIPT_NAME=$(basename "$0")
 readonly SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-readonly LOG_DIR="/var/log/mylicula"
-readonly LOG_FILE="${LOG_DIR}/${SCRIPT_NAME%.*}.log"
-readonly TIMESTAMP=$(date '+%Y-%m-%d %H:%M:%S')
+readonly BASE_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")"
+
+# Source common installer functions
+if [[ -f "${BASE_DIR}/lib/installer_common.sh" ]]; then
+    # shellcheck disable=SC1091
+    source "${BASE_DIR}/lib/installer_common.sh"
+else
+    echo "ERROR: Cannot find lib/installer_common.sh" >&2
+    exit 1
+fi
 
 # Package list files
 readonly STANDARD_PACKAGES_FILE="${SCRIPT_DIR}/resources/apt/standard_packages.txt"
 readonly CUSTOM_PACKAGES_FILE="${SCRIPT_DIR}/resources/apt/custom_packages.txt"
-
-# Runtime flags
-DEBUG_MODE=false
-DRY_RUN_MODE=false
 
 #==================================================================================================
 # Utility Functions
@@ -80,56 +83,6 @@ DESCRIPTION:
     and installs packages in the correct order.
 
 EOF
-}
-
-# Initialize logging
-init_logging() {
-    if ! mkdir -p "$LOG_DIR" 2>/dev/null; then
-        echo "ERROR: Cannot create log directory: $LOG_DIR" >&2
-        echo "       Please run this script with sudo" >&2
-        exit 1
-    fi
-
-    # Log execution separator with timestamp
-    echo "================================================================================" >> "$LOG_FILE"
-    echo "Execution started at: ${TIMESTAMP}" >> "$LOG_FILE"
-    echo "================================================================================" >> "$LOG_FILE"
-}
-
-# Log message to file and optionally to stdout
-log() {
-    local level=$1
-    shift
-    local message="$*"
-    local log_line="[$(date '+%Y-%m-%d %H:%M:%S')] [${level}] ${message}"
-
-    echo "$log_line" >> "$LOG_FILE"
-
-    if [[ "$level" != "DEBUG" ]] || [[ "$DEBUG_MODE" == true ]]; then
-        echo "$message"
-    fi
-}
-
-# Debug logging (only when --debug is enabled)
-debug() {
-    if [[ "$DEBUG_MODE" == true ]]; then
-        log "DEBUG" "$@"
-    fi
-}
-
-# Check if required application is installed
-check_required_app() {
-    local app=$1
-    local install_command=$2
-
-    if ! command -v "$app" &> /dev/null; then
-        log "ERROR" "Required application '${app}' is not installed"
-        log "ERROR" "Install it using: sudo nala install ${install_command}"
-        return 1
-    fi
-
-    debug "Found required application: ${app}"
-    return 0
 }
 
 # Check all required applications
@@ -429,35 +382,19 @@ install_custom_packages() {
 main() {
     # Parse command-line arguments
     while [[ $# -gt 0 ]]; do
-        case $1 in
-            -h|--help)
-                usage
-                exit 0
-                ;;
-            --debug)
-                DEBUG_MODE=true
-                shift
-                ;;
-            --dry-run)
-                DRY_RUN_MODE=true
-                shift
-                ;;
-            *)
-                echo "ERROR: Unknown option: $1" >&2
-                echo "       Use -h or --help for usage information" >&2
-                exit 2
-                ;;
-        esac
+        if parse_common_args "$1" "usage"; then
+            shift
+            continue
+        fi
+
+        # No script-specific arguments, so this is unknown
+        echo "ERROR: Unknown option: $1" >&2
+        echo "       Use -h or --help for usage information" >&2
+        exit 2
     done
 
-    # Check if running as root
-    if [[ $EUID -ne 0 ]]; then
-        echo "ERROR: This script must be run as root (use sudo)" >&2
-        exit 1
-    fi
-
-    # Initialize logging
-    init_logging
+    # Setup common installer infrastructure (root check + logging)
+    setup_installer_common
 
     log "INFO" "========================================"
     log "INFO" "MyLiCuLa Package Installation"
