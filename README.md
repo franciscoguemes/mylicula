@@ -42,17 +42,24 @@ mylicula/
 │   │   └── *.sh           # Individual customization scripts
 │   ├── ubuntu/            # Ubuntu-specific customizations
 │   │   ├── *.sh           # Main customization scripts
-│   │   ├── non_standard_installations/  # Special installations (GitHub CLI, etc.)
-│   │   └── resources/     # Icons, templates, config files
+│   │   └── resources/     # Icons, templates, config files, package lists
+│   │       ├── apt/       # APT package lists
+│   │       │   ├── standard_packages.txt  # Default repo packages
+│   │       │   └── custom_packages.txt    # Custom repos with metadata
+│   │       ├── snap/      # Snap package lists
+│   │       │   └── list_of_snap.txt       # Snap packages with FLAGS
+│   │       ├── images/    # Icons and images
+│   │       └── templates/ # File templates
 │   ├── linux_setup.sh     # Orchestrates generic Linux customizations
 │   └── ubuntu_setup.sh    # Orchestrates Ubuntu-specific customizations
 ├── in_review/             # Scripts under development/testing
 │   ├── linux/             # Linux scripts in review
 │   └── ubuntu/            # Ubuntu scripts in review
 ├── lib/                   # Shared utility libraries
-│   └── common.sh          # Common functions (logging, prompts, interpolation)
+│   ├── common.sh          # Common functions (logging, prompts, symlinks)
+│   └── installer_common.sh # Shared installer functions (logging, args, validation)
 ├── tests/                 # Automated test suite (BATS framework)
-│   ├── test_*.bats        # Unit test files
+│   ├── test_*.bats        # Unit test files (52 tests)
 │   ├── install_bats.sh    # BATS installation script
 │   ├── run_tests.sh       # Test runner
 │   └── README.md          # Testing documentation
@@ -74,7 +81,8 @@ mylicula/
 - Not executed during normal installation
 
 **`lib/`** - Shared utility functions
-- `common.sh` - Logging, prompts, file operations, interpolation system
+- `common.sh` - Logging, prompts, file operations, symlink functions, interpolation
+- `installer_common.sh` - Shared installer utilities (logging, argument parsing, validation)
 
 **`tests/`** - Automated unit testing with BATS framework
 - `test_*.bats` - Unit test files for functions
@@ -134,8 +142,10 @@ When you run `./install.sh`, it:
 3. **Saves Configuration** - Stores settings for future runs
 4. **Runs Generic Linux Customizations** - Executes all `customize/linux/*.sh` scripts
 5. **Runs Ubuntu Customizations** - Executes all `customize/ubuntu/*.sh` scripts
-6. **Runs Non-Standard Installations** - Installs special tools (GitHub CLI, etc.)
-7. **Reports Results** - Shows what succeeded/failed
+   - Package installation (apt and snap)
+   - Template and icon installation
+   - Custom shell functions
+6. **Reports Results** - Shows what succeeded/failed
 
 ### Installation Options
 
@@ -310,9 +320,30 @@ Mark incomplete work with TODO comments:
 
 Major TODOs should also be added to `TODO.md`.
 
-## Common Library (lib/common.sh)
+## Shared Libraries
+
+### Common Library (lib/common.sh)
 
 The common library provides utility functions used across all scripts:
+
+### Installer Common Library (lib/installer_common.sh)
+
+Shared functions for package installation scripts:
+
+**Logging:**
+- `init_logging()` - Initialize logging infrastructure
+- `log \"LEVEL\" \"message\"` - Log with level (INFO, ERROR, DEBUG)
+- `debug \"message\"` - Debug logging (only when DEBUG_MODE=true)
+
+**Validation:**
+- `check_required_app \"app\" \"install_cmd\"` - Check if command exists
+- `require_root()` - Ensure script runs as root
+
+**Argument Parsing:**
+- `parse_common_args \"$1\" \"usage_function\"` - Parse --debug, --dry-run, -h
+
+**Setup:**
+- `setup_installer_common()` - One-line setup (root check + logging)
 
 ### Logging
 - `log_info "message"` - Blue informational message
@@ -368,11 +399,20 @@ Automated unit tests for individual functions using BATS (Bash Automated Testing
 ./tests/run_tests.sh --timing
 ```
 
-**Current Coverage:**
-- `create_symlink()` function: 20 test cases covering all edge cases
-- Circular reference detection
-- Idempotency validation
-- Data protection checks
+**Current Coverage (52 tests total):**
+- `create_symlink()` function: 18 tests
+  - Circular reference detection (direct and indirect)
+  - Idempotency validation
+  - Data protection checks
+  - Path handling (relative/absolute, spaces, special characters)
+- `install_packages.sh` parsing: 18 tests
+  - Standard and custom package parsing
+  - Metadata extraction (REPO, GPG, KEYRING)
+  - Real-world examples (appimagelauncher, xournalpp, GitHub CLI)
+- `install_snap.sh` parsing: 16 tests
+  - FLAGS metadata extraction
+  - Package groups with different flags
+  - Real-world examples (heroku --classic)
 
 ### Integration Tests
 
@@ -413,24 +453,38 @@ Contributions are welcome! Here's how to contribute:
 
 ## Project Status
 
-### ✅ Working Features (Phase 1 Complete)
-- Interactive installation with configuration collection
-- Configuration persistence in `~/.config/mylicula/`
-- Dry-run mode with `.target/` preview
-- Generic Linux and Ubuntu orchestration
-- Interpolation system for `<<<KEY>>>` patterns
-- Comprehensive common library with 30+ functions
-- Error handling and detailed logging
-- Icon installation
-- Terminal function installation (set-title)
-- File template system
-- Non-standard installations (GitHub CLI, PostgreSQL, etc.)
+### ✅ Working Features
+- **Core Installation System:**
+  - Interactive installation with configuration collection
+  - Configuration persistence in `~/.config/mylicula/`
+  - Dry-run mode with `.target/` preview
+  - Generic Linux and Ubuntu orchestration
+  - Interpolation system for `<<<KEY>>>` patterns
+
+- **Package Management:**
+  - APT package installation with hybrid metadata format
+  - Snap package installation with FLAGS support
+  - Custom repository handling with automatic GPG key import
+  - GitHub CLI integration via package lists
+  - 80+ apt packages, 10+ snap packages
+
+- **Code Quality & Testing:**
+  - Comprehensive testing suite with BATS (52 tests, all passing)
+  - Shared library system (`lib/common.sh`, `lib/installer_common.sh`)
+  - Idempotent operations (safe to run multiple times)
+  - Circular reference detection for symlinks
+  - Error handling and detailed logging
+
+- **Customizations:**
+  - Icon installation with custom directory icons
+  - Terminal function installation (set-title)
+  - File template system for Nautilus
+  - Safe symlink management with data protection
 
 ### 🚧 In Development
-- Package installation from lists
 - SSH key generation
-- Custom bash scripts deployment
-- Additional non-standard installations
+- Custom bash scripts deployment from separate repository
+- Additional package installers (if needed)
 
 ### 📋 Planned Features
 - CI/CD testing with GitHub Actions
@@ -514,4 +568,4 @@ See `LICENSE` file for details.
 
 ---
 
-**Last Updated:** November 2024 - Phase 1 Complete
+**Last Updated:** January 2025 - Package Management & Testing Infrastructure Complete
