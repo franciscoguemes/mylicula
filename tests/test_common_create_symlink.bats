@@ -15,12 +15,8 @@ setup() {
     # Create a temporary directory for test files
     TEST_TMP_DIR="$(mktemp -d)"
 
-    # Suppress colored output for cleaner test results
-    export COLOR_RED=''
-    export COLOR_GREEN=''
-    export COLOR_YELLOW=''
-    export COLOR_BLUE=''
-    export COLOR_RESET=''
+    # Note: Cannot suppress colored output as these are readonly in common.sh
+    # Tests should handle colored output in assertions if needed
 }
 
 # Clean up after each test
@@ -70,7 +66,7 @@ teardown() {
     run create_symlink "$link" "$link" "verbose"
 
     [ "$status" -eq 1 ]
-    [[ "$output" == *"[ERROR] Circular reference detected"* ]]
+    [[ "$output" == *"Circular reference detected"* ]]
     [ ! -e "$link" ]
 }
 
@@ -85,7 +81,7 @@ teardown() {
     run create_symlink "$link_a" "$link_b" "verbose"
 
     [ "$status" -eq 1 ]
-    [[ "$output" == *"[ERROR] Circular reference"* ]]
+    [[ "$output" == *"Circular reference"* ]]
 }
 
 @test "create_symlink: detects circular chain (a -> b -> c -> a)" {
@@ -101,7 +97,7 @@ teardown() {
     run create_symlink "$link_a" "$link_c" "verbose"
 
     [ "$status" -eq 1 ]
-    [[ "$output" == *"[ERROR] Circular reference"* ]]
+    [[ "$output" == *"Circular reference"* ]]
 }
 
 @test "create_symlink: detects excessive symlink depth" {
@@ -121,7 +117,7 @@ teardown() {
     run create_symlink "$deep_source" "$final_link" "verbose"
 
     [ "$status" -eq 1 ]
-    [[ "$output" == *"[ERROR] Too many levels of symbolic links"* ]]
+    [[ "$output" == *"Too many levels of symbolic links"* ]]
 }
 
 #-----------------------------------------------------------------------------

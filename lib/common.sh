@@ -284,12 +284,31 @@ create_symlink() {
     local link=$2
     local verbose_mode=${3:-}
 
-    # Normalize paths to absolute for comparison
+    # Normalize link path to absolute for comparison
     local abs_link
     abs_link=$(cd -P "$(dirname "$link")" 2>/dev/null && pwd)/$(basename "$link") || abs_link="$link"
 
-    # Check if source exists
-    if [[ ! -e "$source" ]]; then
+    # Detect direct circular reference BEFORE checking if source exists
+    # If source path equals link path, we know it's circular regardless of existence
+    local abs_source_path
+    if [[ -e "$source" ]] || [[ -L "$source" ]]; then
+        abs_source_path=$(cd -P "$(dirname "$source")" 2>/dev/null && pwd)/$(basename "$source")
+    else
+        # Normalize non-existent path
+        abs_source_path=$(cd -P "$(dirname "$source")" 2>/dev/null && pwd)/$(basename "$source") 2>/dev/null || abs_source_path="$source"
+    fi
+
+    if [[ "$abs_source_path" == "$abs_link" ]]; then
+        if [[ "$verbose_mode" == "verbose" ]]; then
+            echo "        [ERROR] Circular reference detected: link would point to itself" >&2
+        fi
+        log_error "Cannot create symlink: circular reference detected ($source -> $link)"
+        return 1
+    fi
+
+    # Check if source exists (after circular reference check)
+    # Allow broken symlinks as source (they still exist as symlinks)
+    if [[ ! -e "$source" ]] && [[ ! -L "$source" ]]; then
         if [[ "$verbose_mode" == "verbose" ]]; then
             echo "        [ERROR] Source does not exist: $source" >&2
         fi
@@ -297,17 +316,9 @@ create_symlink() {
         return 1
     fi
 
-    # Detect direct circular reference (link points to itself)
+    # Get absolute source path (now we know it exists)
     local abs_source
-    abs_source=$(cd -P "$(dirname "$source")" 2>/dev/null && pwd)/$(basename "$source") || abs_source="$source"
-
-    if [[ "$abs_source" == "$abs_link" ]]; then
-        if [[ "$verbose_mode" == "verbose" ]]; then
-            echo "        [ERROR] Circular reference detected: link would point to itself" >&2
-        fi
-        log_error "Cannot create symlink: circular reference detected ($source -> $link)"
-        return 1
-    fi
+    abs_source=$(cd -P "$(dirname "$source")" 2>/dev/null && pwd)/$(basename "$source")
 
     # Detect indirect circular reference by following symlink chain
     if [[ -L "$source" ]]; then
