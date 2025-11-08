@@ -1,5 +1,39 @@
+TODOs
+===============================================================
+
+## Scripts to Implement
+
+ - [ ] Create SSH keys script (in_review/linux/create_ssh_keys.sh) - Generate SSH keys for code repositories automatically
+ - [ ] Install bash scripts (in_review/linux/install_bash_scripts.sh) - Deploy custom bash scripts to ~/bin
+ - [ ] Install packages script (in_review/ubuntu/install_packages.sh) - Read from resources/apt/list_of_packages.txt and install
+
+## Installation Process
+
+ - [ ] Create a script that triggers the entire installation process
+ - [ ] The installation script must ask the user if he works in a company, if the user say yes, then the script must ask 
+       for the name of the company and store the answer in the OS variable `COMPANY`. If the user do not work in a company
+       then the variable must be empty.
+ - [ ] Create the system variable `COMPANY` that holds the name of the company and append the variable to the `/etc/environment` 
+       file in order to be present among sessions.
+ - [ ] In the script `create_directory_structure` check the `COMPANY` variable and if it is empty then do not create the
+       directory for the company.
+ - [ ] Create script for installing [nala](https://gitlab.com/volian/nala#installation).
+ - [ ] When you create a script for creating keyboard shortcuts, you must have into account the content of the `COMPANY`
+       variable, if the variable is not empty, then create a shortcut with `<Super>+<FIRST_LETTER>` to the directory
+      `~/Documents/$COMPANY`. Note that `FIRST_LETTER` is the first letter of the name of the company.
+
+# Criterias to have into account
+ - All operations must be idempotent: That means executing a script multiple times has the same effect as executing the
+   same script 1 time. The script only perform the operation the first time, the subsequent times the script checks if
+   the operation was already performed and do nothing.
+
 
 # Project Basis
+- Define an order for things. Install first [nala](https://gitlab.com/volian/nala#installation) before installing any package using `apt`.
+  After installing nala, use `nala` to install all packages
+- Install zsh ( https://ohmyz.sh/#install )
+- Create installation script in the parent directory (A script that - installs the other scripts in the system)
+- Review all the scripts in the directory `in_review` and make them production ready (from a functional perspective) and move them to the `customize` directory
 - Review this file and ensure the TODOs are actual
 - Test with a docker Ubuntu image
   - Create a docker Ubuntu container for testing
@@ -7,10 +41,6 @@
 - copy/paste inside the _new_structure_directory each script on its respective folder
 - get the content of the _new_structure_ directory and put it in the root directory
 - create a .gitignore
-- Reestructure the project
-  - Create directory folder structure
-  - Move scripts to the folders
-- Create installation script in the parent folder (A script that - installs the other scripts in the system)
 - Create a proper README.md file
 - Branching strategy
 - Bash Script templates:
@@ -92,48 +122,9 @@
  - https://stackoverflow.com/questions/6482377/check-existence-of-input-argument-in-a-bash-shell-script
 
 
- # Enrich the documentation with plantuml diagrams
-
-Below you have some examples:
-
-```plantuml
-@startuml
-:User: --> (Use)
-"Main Admin" as Admin
-"Use the application" as (Use)
-Admin --> (Admin the application)
-@enduml
-```
+ # Enrich the documentation with Mermaid diagrams
 
 
-```plantuml
-@startwbs
-* Business Process Modelling WBS
-** Launch the project
-*** Complete Stakeholder Research
-*** Initial Implementation Plan
-** Design phase
-*** Model of AsIs Processes Completed
-**** Model of AsIs Processes Completed1
-**** Model of AsIs Processes Completed2
-*** Measure AsIs performance metrics
-*** Identify Quick Wins
-** Complete innovate phase
-@endwbs
-```
-
-Source:
- - [Diagrams with plantuml](https://blog.anoff.io/2018-07-31-diagrams-with-plantuml/)
-
-
-
-# Ideas for future scripts
-
-## Script for checking sha256 on right click
-Script that creates a new entry on the right click menu when a single file is selected and shows a menu called "Checksum" and from here a set of options are displayed such as "sha256", "md5", etc ... When the user selects one of this options (i.e. sha256) a popup textbox is displayed where the user can copy/paste the checksum to be checked.
-
-## Joint PDFs on right click
-Script that creates a new entry on the right click menu when 2 or more PDF files are selected and merge. If the user selects the option "Merge PDFs" the action will result in a new PDF document that contains all the other PDF documents merged by the sorting name in the OS (Check what is the sorting criteria for filenames in Linux). If there are files selected that are not PDF files (i.e 3 PDF files plus a JPG file, the non PDF files will be ignored).
 
 
 

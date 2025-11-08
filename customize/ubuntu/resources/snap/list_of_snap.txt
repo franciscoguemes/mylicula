@@ -1,20 +1,46 @@
 ####################################################################################################
-# All the snap packages listed here are installed with the Ubuntu packet
-# manager: 
-#           sudo snap install PACKET_NAME
+# Snap Packages
+# These packages are installed using the snap package manager
+# Format:
+#   # Package Group Name / Description
+#   # FLAGS: additional flags for snap install (e.g., --classic)
+#   package-name-1
+#   package-name-2
 #
-#           sudo snap install \
-#               PACKET_1 \
-#               PACKET_2 \
-#               ... \
-#               PACKET_N \
-#
+# Note: Empty line separates package groups
 ####################################################################################################
 
-postman
+#****************************************************************************************************
+# Communication & Collaboration
+#****************************************************************************************************
 slack
-# chromium
+
+#****************************************************************************************************
+# Web Browsers
+#****************************************************************************************************
+chromium
+
+#****************************************************************************************************
+# Office Suite
+#****************************************************************************************************
+libreoffice
+
+#****************************************************************************************************
+# Development Tools
+#****************************************************************************************************
+postman
+mysql-workbench-community
+
+# Command-line YAML/XML/TOML processor
 yq
 
-# sudo snap install --classic heroku
+# Heroku CLI
+# FLAGS: --classic
 heroku
+
+#****************************************************************************************************
+# Android Tools
+#****************************************************************************************************
+# Application for display and control of Android devices connected by USB or TCP/IP
+scrcpy
+guiscrcpy

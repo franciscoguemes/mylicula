@@ -1,9 +1,16 @@
 #!/usr/bin/env bash
 ####################################################################################################
-#Script Name	: yourscriptname.sh                                                                                             
+#Args           : 
+#                   $1  What is the first argument?
+#                   $2  What is the second argument?
+#                   ...
+#                   $n  What is the n-th argument?                                                                                         
+#Usage          :   Typical example of usage of the script...                                                                                            
+#Output stdout  :   What is the output of the script in stdout?
+#Output stderr  :   What is the output of the script in stderr?
+#Return code    :   Which status code does the script returns to the OS?
 #Description	: Here it goes your description
-#                                                                                 
-#Args           :                                                                                           
+#                                                                                                                                                           
 #Author       	: Francisco Güemes                                                
 #Email         	: francisco@franciscoguemes.com                                           
 #See also	    : https://stackoverflow.com/questions/14008125/shell-script-common-template

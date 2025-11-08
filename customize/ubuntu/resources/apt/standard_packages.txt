@@ -1,0 +1,185 @@
+####################################################################################################
+# Standard Ubuntu Packages
+# These packages are available in the default Ubuntu repositories
+# No additional PPAs or GPG keys required
+####################################################################################################
+
+#****************************************************************************************************
+# System Integration and Utilities
+#****************************************************************************************************
+# Plugins for gedit: https://stackoverflow.com/questions/7649626/block-commenting-in-gedit
+gedit-plugins
+
+# Fix Ubuntu 20.04 lockscreen not working
+# https://askubuntu.com/questions/184728/how-do-i-lock-the-screen-from-a-terminal
+# https://askubuntu.com/questions/1242110/after-upgrading-to-ubuntu-20-04-lockscreen-not-working
+gnome-screensaver
+
+# A nautilus extension to customize Nautilus through Python scripts
+python-nautilus
+
+# To create GTK dialogue boxes from the terminal/scripts
+zenity
+
+
+#****************************************************************************************************
+# Python3 Related Packages
+#****************************************************************************************************
+# Package manager system for Python3
+python3-pip
+
+# Package to create virtual environments in Python3
+python3.8-venv
+
+# tkinter package for Python
+python3-tk
+
+
+#****************************************************************************************************
+# General Purpose CLI Commands
+#****************************************************************************************************
+tree
+ncal
+figlet
+toilet
+wmctrl
+
+# Use the clipboard in the command line: https://opensource.com/article/19/7/xclip
+xclip
+
+# Simulate typing
+xdotool
+
+
+#****************************************************************************************************
+# Network Tools
+#****************************************************************************************************
+curl
+wget
+nmap
+speedtest
+
+
+#****************************************************************************************************
+# Processors and Pre-Processors
+#****************************************************************************************************
+jq
+libxml2-utils
+xmllint
+xmlstarlet
+
+
+#****************************************************************************************************
+# Compressors & File Utilities
+#****************************************************************************************************
+unrar
+p7zip-full
+pdfunite
+hashalot
+
+
+#****************************************************************************************************
+# Development Tools
+#****************************************************************************************************
+git
+gcc
+g++
+
+
+#****************************************************************************************************
+# Database Clients
+#****************************************************************************************************
+mysql-client
+postgresql-client
+
+
+#****************************************************************************************************
+# Multimedia
+#****************************************************************************************************
+graphicsmagick-imagemagick-compat
+
+
+#****************************************************************************************************
+# General Purpose Applications
+#****************************************************************************************************
+chromium-browser
+keepassxc
+
+
+#****************************************************************************************************
+# Development Applications
+#****************************************************************************************************
+pencil
+filezilla
+virtualbox
+
+# Markdown editor https://askubuntu.com/a/1387052/227301
+retext
+
+# Compare files. http://meldmerge.org/
+meld
+
+# A terminal on which set the title in a programatic way
+xfce4-terminal
+
+
+#****************************************************************************************************
+# Productivity
+#****************************************************************************************************
+gnome-shell-pomodoro
+
+
+#****************************************************************************************************
+# PDF Editors
+#****************************************************************************************************
+master-pdf-editor
+
+
+#****************************************************************************************************
+# Latex
+#****************************************************************************************************
+texstudio
+latexmk
+
+
+#****************************************************************************************************
+# Multimedia Applications
+#****************************************************************************************************
+pinta
+easytag
+vlc
+
+# Screencast. https://itsfoss.com/best-linux-screen-recorders/
+kazam
+
+# https://askubuntu.com/questions/107726/how-to-create-animated-gif-images-of-a-screencast
+peek
+
+# Animations
+pencil2d
+
+# A *.epub files reader
+fbreader
+
+
+#****************************************************************************************************
+# Gnome Configuration
+#****************************************************************************************************
+# https://askubuntu.com/questions/1404497/how-to-install-gnome-shell-extensions-in-ubuntu-22-04-lts
+gnome-shell-extension-manager
+
+# https://gitlab.gnome.org/GNOME/gnome-shell-extensions
+gnome-shell-extension-prefs
+
+# https://gitlab.gnome.org/GNOME/gnome-tweaks
+gnome-tweak-tool
+
+# https://chrome.google.com/webstore/detail/gnome-shell-integration/gphhapmejobijbbhgpjhcjognlahblep?hl=en
+chrome-gnome-shell
+
+
+#****************************************************************************************************
+# Connectivity
+#****************************************************************************************************
+# Android --> GSConnect: https://www.omgubuntu.co.uk/2018/11/connect-android-ubuntu-gsconnect
+gnome-shell-extension-gsconnect

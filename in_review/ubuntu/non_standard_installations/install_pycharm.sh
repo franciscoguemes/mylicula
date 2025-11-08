@@ -1,4 +1,5 @@
 
+#TODO: Update with the script in the Mega/Configuration folder...
 
 #TODO: Download pycharm-community
 
