@@ -1,0 +1,24 @@
+####################################################################################################
+# Custom Repository Packages
+# These packages require additional PPAs or repositories to be added
+# Format:
+#   # Package Group Name / Description
+#   # REPO: repository URL or PPA
+#   # GPG: GPG key URL (if needed)
+#   # KEYRING: keyring file path (if needed)
+#   package-name-1
+#   package-name-2
+#
+# Note: Empty line separates package groups
+####################################################################################################
+
+# AppImageLauncher
+# Integrate AppImage apps in the system
+# https://askubuntu.com/questions/902672/registering-an-appimage-file-as-a-desktop-app-in-kde
+# REPO: ppa:appimagelauncher-team/stable
+appimagelauncher
+
+# Xournal++
+# PDF annotation and note-taking application
+# REPO: ppa:apandada1/xournalpp-stable
+xournalpp
