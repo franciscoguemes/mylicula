@@ -17,7 +17,7 @@
 
 # Ensure the script runs from the correct location regardless of where it's executed
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-BASE_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+BASE_DIR="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 
 # Source common library for colored output
 source "${BASE_DIR}/lib/common.sh"
