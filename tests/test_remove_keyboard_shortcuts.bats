@@ -17,6 +17,7 @@
 setup() {
     # Create temporary test directory
     export TEST_TMP_DIR="$(mktemp -d)"
+    export MYLICULA_BASE_DIR="${TEST_TMP_DIR}"
     export LIB_DIR="${TEST_TMP_DIR}/lib"
     export GSETTINGS_DATA="${TEST_TMP_DIR}/gsettings_data"
     export GSETTINGS_SHORTCUTS="${TEST_TMP_DIR}/shortcuts"

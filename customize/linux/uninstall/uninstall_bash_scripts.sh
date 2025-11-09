@@ -16,9 +16,27 @@
 #                   https://stackoverflow.com/questions/192249/how-do-i-parse-command-line-arguments-in-bash
 ####################################################################################################
 
-# Get the directory where this script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-BASE_DIR="$(cd "$SCRIPT_DIR/../../.." && pwd)"
+
+# Find BASE_DIR - Priority 1: env var, Priority 2: search for lib/common.sh
+if [[ -n "${MYLICULA_BASE_DIR:-}" ]]; then
+    BASE_DIR="$MYLICULA_BASE_DIR"
+else
+    # Search upwards for lib/common.sh (max 4 levels for uninstall/ subdirectory)
+    BASE_DIR="$SCRIPT_DIR"
+    for i in {1..4}; do
+        if [[ -f "${BASE_DIR}/lib/common.sh" ]]; then
+            break
+        fi
+        BASE_DIR="$(dirname "$BASE_DIR")"
+    done
+
+    if [[ ! -f "${BASE_DIR}/lib/common.sh" ]]; then
+        echo "[ERROR] Cannot find MyLiCuLa project root" >&2
+        echo "Please set MYLICULA_BASE_DIR environment variable or run via install.sh" >&2
+        exit 1
+    fi
+fi
 
 # Source common library for color output
 source "${BASE_DIR}/lib/common.sh"

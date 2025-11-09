@@ -8,6 +8,7 @@
 setup() {
     # Get the base directory
     BASE_DIR="$(cd "$(dirname "$BATS_TEST_FILENAME")/.." && pwd)"
+    export MYLICULA_BASE_DIR="${BASE_DIR}"
 
     # Script to test
     INSTALL_PACKAGES_SCRIPT="${BASE_DIR}/customize/ubuntu/install_packages.sh"
