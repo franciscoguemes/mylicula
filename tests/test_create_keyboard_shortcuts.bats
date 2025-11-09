@@ -16,6 +16,7 @@
 setup() {
     # Create temporary test directory
     export TEST_TMP_DIR="$(mktemp -d)"
+    export MYLICULA_BASE_DIR="${TEST_TMP_DIR}"
     export BIN_DIR="${TEST_TMP_DIR}/bin"
     export SCRIPT_DIR="${TEST_TMP_DIR}/scripts"
     export LIB_DIR="${TEST_TMP_DIR}/lib"

@@ -8,6 +8,7 @@
 setup() {
     # Get the base directory
     BASE_DIR="$(cd "$(dirname "$BATS_TEST_FILENAME")/.." && pwd)"
+    export MYLICULA_BASE_DIR="${BASE_DIR}"
 
     # Source the common library
     source "${BASE_DIR}/lib/common.sh"

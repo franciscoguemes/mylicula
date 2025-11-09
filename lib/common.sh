@@ -50,6 +50,86 @@ get_script_dir() {
 }
 
 #
+# Function: find_project_root
+# Description: Find MyLiCuLa project root by searching upwards for marker files/directories
+# Args:
+#   $1 - Starting directory (optional, defaults to current directory)
+# Usage: BASE_DIR=$(find_project_root) or BASE_DIR=$(find_project_root "$SCRIPT_DIR")
+# Output (stdout): Absolute path to project root
+# Output (stderr): Error message if not found
+# Return code: 0 on success, 1 if not found
+#
+find_project_root() {
+    local current_dir="${1:-$(pwd)}"
+
+    # Resolve to absolute path
+    current_dir="$(cd "$current_dir" 2>/dev/null && pwd)" || return 1
+
+    # Search upwards for MyLiCuLa markers
+    while [[ "$current_dir" != "/" ]]; do
+        # Check for project markers (install.sh, lib/, and either tests/ or scripts/)
+        if [[ -f "$current_dir/install.sh" ]] && \
+           [[ -d "$current_dir/lib" ]] && \
+           { [[ -d "$current_dir/tests" ]] || [[ -d "$current_dir/scripts" ]]; }; then
+            echo "$current_dir"
+            return 0
+        fi
+        current_dir="$(dirname "$current_dir")"
+    done
+
+    # Not found
+    echo "[ERROR] Could not find MyLiCuLa project root" >&2
+    return 1
+}
+
+#
+# Function: get_base_dir
+# Description: Get MyLiCuLa base directory with intelligent fallback logic
+#              Priority: 1) MYLICULA_BASE_DIR env var, 2) config file, 3) find upwards
+# Args:
+#   $1 - Starting directory for search (optional, used in fallback)
+# Usage: BASE_DIR=$(get_base_dir) or BASE_DIR=$(get_base_dir "$SCRIPT_DIR")
+# Output (stdout): Absolute path to project root
+# Output (stderr): Error message if not found
+# Return code: 0 on success, 1 if not found
+#
+get_base_dir() {
+    local start_dir="${1:-}"
+
+    # Priority 1: Use environment variable if set (from install.sh or parent process)
+    if [[ -n "${MYLICULA_BASE_DIR:-}" ]]; then
+        echo "$MYLICULA_BASE_DIR"
+        return 0
+    fi
+
+    # Priority 2: Try to load from config file
+    local config_file="${HOME}/.config/mylicula/mylicula.conf"
+    if [[ -f "$config_file" ]]; then
+        # Source config in subshell to avoid polluting current environment
+        local base_from_config
+        base_from_config=$(
+            # Disable errexit for this subshell
+            set +e
+            # shellcheck disable=SC1090
+            source "$config_file" 2>/dev/null
+            echo "${CONFIG[BASE_DIR]:-}"
+        )
+        if [[ -n "$base_from_config" ]] && [[ -d "$base_from_config" ]]; then
+            echo "$base_from_config"
+            return 0
+        fi
+    fi
+
+    # Priority 3: Find by searching upwards from starting directory
+    if [[ -n "$start_dir" ]]; then
+        find_project_root "$start_dir"
+    else
+        # Try from current directory
+        find_project_root "$(pwd)"
+    fi
+}
+
+#
 # Function: log_info
 # Description: Print informational message
 # Args:

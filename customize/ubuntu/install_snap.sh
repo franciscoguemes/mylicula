@@ -33,8 +33,29 @@
 # Global Configuration
 #==================================================================================================
 readonly SCRIPT_NAME=$(basename "$0")
-readonly SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
-readonly BASE_DIR="$(dirname "$(dirname "$SCRIPT_DIR")")"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Find BASE_DIR - Priority 1: env var, Priority 2: search for lib/installer_common.sh
+if [[ -n "${MYLICULA_BASE_DIR:-}" ]]; then
+    BASE_DIR="$MYLICULA_BASE_DIR"
+else
+    # Search upwards for lib/installer_common.sh (max 3 levels)
+    BASE_DIR="$SCRIPT_DIR"
+    for i in {1..3}; do
+        if [[ -f "${BASE_DIR}/lib/installer_common.sh" ]]; then
+            break
+        fi
+        BASE_DIR="$(dirname "$BASE_DIR")"
+    done
+
+    if [[ ! -f "${BASE_DIR}/lib/installer_common.sh" ]]; then
+        echo "[ERROR] Cannot find MyLiCuLa project root" >&2
+        echo "Please set MYLICULA_BASE_DIR environment variable or run via install.sh" >&2
+        exit 1
+    fi
+fi
+
+readonly BASE_DIR
 
 # Source common installer functions
 if [[ -f "${BASE_DIR}/lib/installer_common.sh" ]]; then

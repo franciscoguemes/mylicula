@@ -29,6 +29,9 @@ set -euo pipefail
 # Get the directory where this script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 
+# Set and export BASE_DIR for all child scripts
+export MYLICULA_BASE_DIR="$SCRIPT_DIR"
+
 # Source common utility functions
 # shellcheck disable=SC1091
 source "${SCRIPT_DIR}/lib/common.sh"
@@ -235,6 +238,7 @@ CONFIG[GITHUB_USER]="${CONFIG[GITHUB_USER]}"
 
 CONFIG[HOME]="${CONFIG[HOME]}"
 CONFIG[SCRIPT_DIR]="${CONFIG[SCRIPT_DIR]}"
+CONFIG[BASE_DIR]="${MYLICULA_BASE_DIR}"
 
 # =============================================================================
 # System Information (auto-detected)
@@ -320,6 +324,7 @@ collect_configuration() {
         # Add derived configuration BEFORE saving
         CONFIG[HOME]="${HOME}"
         CONFIG[SCRIPT_DIR]="${SCRIPT_DIR}"
+        CONFIG[BASE_DIR]="${MYLICULA_BASE_DIR}"
 
         # Save configuration for future use
         save_config
@@ -328,6 +333,7 @@ collect_configuration() {
     # Ensure derived configuration is set even when loading saved config
     CONFIG[HOME]="${HOME}"
     CONFIG[SCRIPT_DIR]="${SCRIPT_DIR}"
+    CONFIG[BASE_DIR]="${MYLICULA_BASE_DIR}"
 
     # Display collected configuration
     echo ""
