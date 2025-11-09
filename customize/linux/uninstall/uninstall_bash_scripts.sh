@@ -18,7 +18,7 @@
 
 # Get the directory where this script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-BASE_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
+BASE_DIR="$(cd "$SCRIPT_DIR/../../.." && pwd)"
 
 # Source common library for color output
 source "${BASE_DIR}/lib/common.sh"
