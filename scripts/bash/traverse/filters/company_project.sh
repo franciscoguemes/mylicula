@@ -2,13 +2,16 @@
 ####################################################################################################
 # Args           :
 #                   $1  Path to the directory to be checked.
-# Usage          : ./zulutrade_project.sh /path/to/subdirectory
+# Usage          : ./company_project.sh /path/to/subdirectory
 # Output stdout  : No direct output on success (for use as a filter script).
 # Output stderr  : Error messages if conditions are not met.
 # Return code    : 0 if all conditions are met, 1 otherwise.
 # Description	 : Checks if a directory meets specific conditions:
 #                   - Is a git repository (contains .git directory).
-#                   - Has a remote URL starting with "https://devtools.zulutrade.local" in .git/config.
+#                   - Has a remote URL matching the configured company URL pattern in .git/config.
+#
+#                 This is an example filter that can be customized for your needs.
+#                 Modify COMPANY_URL constant below to match your company's Git server.
 # Author         : Francisco Güemes
 # Email          : francisco@franciscoguemes.com
 ####################################################################################################
@@ -27,9 +30,11 @@ if [ ! -d "$dir/.git" ]; then
     exit 1
 fi
 
+COMPANY_URL=https://devtools.company.local*
+
 # Check remote URL in .git/config
 remote_url=$(git -C "$dir" config --get remote.origin.url)
-if [[ "$remote_url" != https://devtools.zulutrade.local* ]]; then
-    echo "Directory $dir does not have a valid zulutrade remote URL." >&2
+if [[ "$remote_url" != "$COMPANY_URL" ]]; then
+    echo "Directory $dir does not have a valid remote URL." >&2
     exit 1
 fi

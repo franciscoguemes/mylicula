@@ -23,7 +23,6 @@
 
 # Default values
 GITLAB_URL=""
-PAT_FILE="$HOME/git/zulutrade/devtools/misc/linux-scripts/resources/gitlab/PAT"
 LOG_FILE="/tmp/list_GitLab_projects.log"
 DEBUG=false
 DRY_RUN=false

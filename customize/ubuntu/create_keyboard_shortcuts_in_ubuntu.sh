@@ -47,6 +47,9 @@ LINKS=(
     "generate_link.sh"
     "code_2_markdown_in_clipboard.sh"
     "find_text.sh"
+    "Adapt URL in clipboard"
+    "Connect to VPN"
+    "Disconnect from VPN"
 )
 
 # Function to check if a symbolic link exists
@@ -139,8 +142,8 @@ create_shortcut "Generate link" "generate_link.sh" "<Shift>L"
 create_shortcut "Text to Markdown code" "code_2_markdown_in_clipboard.sh" "<Primary>Above_Tab"
 create_shortcut "Find text in files" "find_text.sh" "<Alt>F"
 create_shortcut "Adapt URL in clipboard" "update_url_in_clipboard.sh" "<Primary>u"
-create_shortcut "Connect to Zulutrade VPN" "connect_to_Zulutrade_VPN.sh" "<Shift>KP_Add"
-create_shortcut "Disconnect from Zulutrade VPN" "disconnect_from_Zulutrade_VPN.sh" "<Shift>KP_Subtract"
+create_shortcut "Connect to VPN" "connect_to_VPN.sh" "<Shift>KP_Add"
+create_shortcut "Disconnect from VPN" "disconnect_from_VPN.sh" "<Shift>KP_Subtract"
 
 echo ""
 echo "${COLOR_GREEN}[SUCCESS]${COLOR_RESET} All keyboard shortcuts created successfully."

@@ -6,8 +6,8 @@
 #                   $3  Full path to the certificate file (*.pem)
 #                   -h, --help  Display usage information
 # Usage          :   ./install_cert_in_jdk.sh <JDK identifier> <certificate alias> <path to certificate file>
-#                   ./install_cert_in_jdk.sh 8.0.412-tem ZuluTradeCA ./zulutrade-CONTROLLER-CA.pem
-#                   ./install_cert_in_jdk.sh 8.0.265-open ZuluTradeCA ./zulutrade-CONTROLLER-CA.pem
+#                   ./install_cert_in_jdk.sh 8.0.412-tem ACME_CA ./acme-CONTROLLER-CA.pem
+#                   ./install_cert_in_jdk.sh 8.0.265-open ACME_CA ./acme-CONTROLLER-CA.pem
 #                   ./install_cert_in_jdk.sh -h
 # Output stdout  :   Success or status messages indicating the progress of the script.
 # Output stderr  :   Error messages in case of failures.
@@ -32,7 +32,7 @@ Install a certificate into a specific JDK's cacerts keystore.
 
 ARGUMENTS:
     JDK_IDENTIFIER   JDK version from SDKMan (e.g., 21.0.3-tem, 8.0.412-tem)
-    CERT_ALIAS       Alias name for the certificate (e.g., ZuluTradeCA)
+    CERT_ALIAS       Alias name for the certificate (e.g., ACME_CA)
     CERT_PATH        Full path to the certificate file (*.pem)
 
 OPTIONS:
@@ -51,7 +51,7 @@ REQUIREMENTS:
     - Target JDK must be installed via SDKMan
 
 EXAMPLES:
-    $(basename "$0") 8.0.412-tem ZuluTradeCA ./zulutrade-CA.pem
+    $(basename "$0") 8.0.412-tem ACME_CA ./acme-CA.pem
     $(basename "$0") 21.0.3-tem ACME_CA /path/to/certificate.pem
     $(basename "$0") --help
 

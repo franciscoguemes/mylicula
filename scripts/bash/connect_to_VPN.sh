@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 ####################################################################################################
 # Args           :
-#                   $1  (Optional) Name or ID of the network connection to bring up. Default is "ZuluVPN".
+#                   $1  (Required) Name or ID of the network connection to bring up.
 #                   -h, --help  Display usage information
-# Usage          :   ./connect_to_Zulutrade_VPN.sh [connection_name]
-#                   ./connect_to_Zulutrade_VPN.sh -h
+# Usage          :   ./connect_to_VPN.sh <connection_name>
+#                   ./connect_to_VPN.sh -h
 # Output stdout  :   Detailed execution trace of the nmcli command to bring up the specified connection.
 # Output stderr  :   Error messages if the specified connection does not exist or fails to bring up.
 # Return code    :   0 on success, non-zero on failure.
-# Description    :   This script uses nmcli to bring up a specified network connection. If no connection
-#                    name is provided, it defaults to "ZuluVPN". The script runs in verbose and debug
+# Description    :   This script uses nmcli to bring up a specified network connection.
+#                    The connection name is required. The script runs in verbose and debug
 #                    mode to provide detailed output.
 # Author         :   Francisco Güemes
 # Email          :   francisco@franciscoguemes.com
@@ -22,22 +22,24 @@
 # Function to display help
 show_help() {
     cat << EOF
-Usage: $(basename "$0") [CONNECTION_NAME] [-h|--help]
+Usage: $(basename "$0") <CONNECTION_NAME> [-h|--help]
 
 Connect to a VPN using NetworkManager's nmcli command.
 
+ARGUMENTS:
+    CONNECTION_NAME  Name of the VPN connection (required)
+
 OPTIONS:
-    CONNECTION_NAME  Name of the VPN connection (default: ZuluVPN)
     -h, --help       Display this help message
 
 DESCRIPTION:
-    This script connects to a VPN using nmcli. If no connection name is
-    provided, it defaults to "ZuluVPN". The script runs with verbose output
-    to show the connection process.
+    This script connects to a VPN using nmcli. The connection name must be
+    provided as an argument. The script runs with verbose output to show
+    the connection process.
 
 EXAMPLES:
-    $(basename "$0")              # Connect to ZuluVPN
     $(basename "$0") MyVPN        # Connect to MyVPN
+    $(basename "$0") WorkVPN      # Connect to WorkVPN
     $(basename "$0") --help       # Show this help
 
 REQUIREMENTS:
@@ -68,7 +70,9 @@ if [ "$#" -eq 1 ]; then
             ;;
     esac
 elif [ "$#" -eq 0 ]; then
-    CONNECTION_NAME="ZuluVPN"
+    echo "Error: Connection name is required." >&2
+    show_help
+    exit 1
 else
     echo "Error: Too many arguments." >&2
     show_help

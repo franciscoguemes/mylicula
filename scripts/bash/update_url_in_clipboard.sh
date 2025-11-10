@@ -9,8 +9,8 @@
 # Output stderr  :   Error messages if clipboard access fails or if invalid input is detected.
 # Return code    :   0 if successful, 1 if clipboard access fails or if the text is not a URL.
 # Description    :   This script reads text from the clipboard, checks if it is a URL, and modifies URLs
-#                   from a specific domain (devtools.finvasia.com) to another domain
-#                   (devtools.zulutrade.local). If the text is not a URL or doesn't match the specific
+#                   from a specific domain (devtools.acme.com) to another domain
+#                   (devtools.acmetrade.local). If the text is not a URL or doesn't match the specific
 #                   domain, it copies the original text back to the clipboard. Debugging mode can be
 #                   enabled to display detailed information about the process.
 # Author         :   Francisco Güemes
@@ -34,7 +34,7 @@ OPTIONS:
 
 DESCRIPTION:
     This script processes URLs from the clipboard and replaces:
-    - devtools.finvasia.com → devtools.zulutrade.local
+    - devtools.acme.com → devtools.acmetrade.local
 
     If the text is not a URL or doesn't match the pattern, the original
     text is preserved in the clipboard.
@@ -94,7 +94,7 @@ is_git_ssh() {
 is_devtools_git_ssh() {
     local url=$1
     # Check if the URL matches the specific pattern to be replaced
-    if echo "$url" | grep -qE 'git@devtools\.finvasia\.com:.*'; then
+    if echo "$url" | grep -qE 'git@devtools\.acme\.com:.*'; then
         return 0
     else
         return 1
@@ -120,7 +120,7 @@ is_url() {
 is_devtools_url() {
     local url=$1
     # Check if the URL matches the specific pattern to be replaced
-    if echo "$url" | grep -qE 'https?://devtools\.finvasia\.com/.*|git@devtools\.finvasia\.com:.*'; then
+    if echo "$url" | grep -qE 'https?://devtools\.acme\.com/.*|git@devtools\.acme\.com:.*'; then
         return 0
     else
         return 1
@@ -131,7 +131,7 @@ is_devtools_url() {
 replace_url() {
     local url=$1
     # Perform the substitution
-    modified_url=$(echo "$url" | sed 's#https://devtools\.finvasia\.com/#https://devtools.zulutrade.local/#' | sed 's#git@devtools\.finvasia\.com:#git@devtools.zulutrade.local:#')
+    modified_url=$(echo "$url" | sed 's#https://devtools\.acme\.com/#https://devtools.acmetrade.local/#' | sed 's#git@devtools\.acme\.com:#git@devtools.acmetrade.local:#')
     echo "$modified_url"
 }
 

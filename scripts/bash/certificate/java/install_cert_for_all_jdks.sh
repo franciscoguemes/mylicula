@@ -28,7 +28,7 @@ Usage: $(basename "$0") CERT_ALIAS CERT_PATH [-h|--help]
 Install a certificate into all JDKs managed by SDKMan.
 
 ARGUMENTS:
-    CERT_ALIAS       Alias name for the certificate (e.g., ZuluTradeCA, ACME_CA)
+    CERT_ALIAS       Alias name for the certificate (e.g., ACME_CA)
     CERT_PATH        Full path to the certificate file (*.pem)
 
 OPTIONS:
@@ -46,7 +46,7 @@ REQUIREMENTS:
     - Helper scripts: list_installed_jdks.sh, install_cert_in_jdk.sh
 
 EXAMPLES:
-    $(basename "$0") ZuluTradeCA ./zulutrade-CA.pem
+    $(basename "$0") ACME_CA ./acme-CA.pem
     $(basename "$0") ACME_CA /path/to/acme-certificate.pem
     $(basename "$0") --help
 

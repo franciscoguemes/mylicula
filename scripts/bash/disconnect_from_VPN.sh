@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 ####################################################################################################
 # Args           :
-#                   $1  (Optional) Name or ID of the network connection to bring down. Default is "ZuluVPN".
+#                   $1  (Required) Name or ID of the network connection to bring down.
 #                   -h, --help  Display usage information
-# Usage          :   ./disconnect_from_Zulutrade_VPN.sh [connection_name]
-#                   ./disconnect_from_Zulutrade_VPN.sh -h
+# Usage          :   ./disconnect_from_VPN.sh <connection_name>
+#                   ./disconnect_from_VPN.sh -h
 # Output stdout  :   Detailed execution trace of the nmcli command to bring down the specified connection.
 # Output stderr  :   Error messages if the specified connection does not exist or fails to bring down.
 # Return code    :   0 on success, non-zero on failure.
-# Description    :   This script uses nmcli to bring down a specified network connection. If no connection
-#                    name is provided, it defaults to "ZuluVPN". The script runs in verbose and debug
+# Description    :   This script uses nmcli to bring down a specified network connection.
+#                    The connection name is required. The script runs in verbose and debug
 #                    mode to provide detailed output.
 # Author         :   Francisco Güemes
 # Email          :   francisco@franciscoguemes.com
@@ -22,22 +22,24 @@
 # Function to display help
 show_help() {
     cat << EOF
-Usage: $(basename "$0") [CONNECTION_NAME] [-h|--help]
+Usage: $(basename "$0") <CONNECTION_NAME> [-h|--help]
 
 Disconnect from a VPN using NetworkManager's nmcli command.
 
+ARGUMENTS:
+    CONNECTION_NAME  Name of the VPN connection (required)
+
 OPTIONS:
-    CONNECTION_NAME  Name of the VPN connection (default: ZuluVPN)
     -h, --help       Display this help message
 
 DESCRIPTION:
-    This script disconnects from a VPN using nmcli. If no connection name is
-    provided, it defaults to "ZuluVPN". The script runs with verbose output
-    to show the disconnection process.
+    This script disconnects from a VPN using nmcli. The connection name must be
+    provided as an argument. The script runs with verbose output to show
+    the disconnection process.
 
 EXAMPLES:
-    $(basename "$0")              # Disconnect from ZuluVPN
     $(basename "$0") MyVPN        # Disconnect from MyVPN
+    $(basename "$0") WorkVPN      # Disconnect from WorkVPN
     $(basename "$0") --help       # Show this help
 
 REQUIREMENTS:
@@ -68,7 +70,9 @@ if [ "$#" -eq 1 ]; then
             ;;
     esac
 elif [ "$#" -eq 0 ]; then
-    CONNECTION_NAME="ZuluVPN"
+    echo "Error: Connection name is required." >&2
+    show_help
+    exit 1
 else
     echo "Error: Too many arguments." >&2
     show_help
