@@ -190,36 +190,26 @@ clone_repositories() {
             fi
         fi
 
-        # Create the directory structure (owner/repository)
-        local dir_path="$root_dir/$owner"
-
-        # Check if the directory already exists
-        if [ ! -d "$dir_path" ]; then
-            if [ "$DRY_RUN" = false ]; then
-                mkdir -p "$dir_path"
-                log "Created directory: $dir_path"
-            else
-                log "Dry run: would create directory: $dir_path"
-            fi
-        else
-            log "Directory already exists: $dir_path"
-        fi
-
         # Check if the repository already exists
-        if [ ! -d "$dir_path/$repo_name" ]; then
+        if [ ! -d "$root_dir/$repo_name" ]; then
             if [ "$DRY_RUN" = false ]; then
-                echo "Cloning $full_name into $dir_path/$repo_name"
-                git clone "$repo_url" "$dir_path/$repo_name" 2>&1 | tee -a "$LOG_FILE"
-                log "Cloned repository: $full_name into $dir_path"
+                echo "Cloning $full_name into $root_dir/$repo_name"
+
+                # Modify URL to include PAT token for authentication
+                # Convert https://github.com/owner/repo to https://token@github.com/owner/repo
+                local clone_url="${repo_url/https:\/\//https:\/\/${GITHUB_TOKEN}@}"
+
+                git clone "$clone_url" "$root_dir/$repo_name" 2>&1 | tee -a "$LOG_FILE"
+                log "Cloned repository: $full_name into $root_dir"
                 ((cloned_count++)) || true
             else
-                echo "[DRY-RUN] Would clone: $full_name into $dir_path/$repo_name"
-                log "Dry run: would clone repository: $full_name into $dir_path"
+                echo "[DRY-RUN] Would clone: $full_name into $root_dir/$repo_name"
+                log "Dry run: would clone repository: $full_name into $root_dir"
                 ((cloned_count++)) || true
             fi
         else
-            echo "Repository $full_name already exists in $dir_path, skipping"
-            log "Repository $repo_name already exists in $dir_path, skipping clone"
+            echo "Repository $full_name already exists in $root_dir, skipping"
+            log "Repository $repo_name already exists in $root_dir, skipping clone"
             ((skipped_count++)) || true
         fi
     done
@@ -364,53 +354,31 @@ export GH_TOKEN="$GITHUB_TOKEN"
 echo "Fetching repositories from GitHub..."
 log "Fetching repositories from GitHub..."
 
-if [ "$DRY_RUN" = false ]; then
-    # Build gh command based on whether user is specified
-    if [ -n "$GITHUB_USER" ]; then
-        repos_json=$(gh repo list "$GITHUB_USER" --limit 1000 --json name,owner,nameWithOwner,url,isPrivate,isFork,isArchived,visibility 2>&1)
-    else
-        repos_json=$(gh repo list --limit 1000 --json name,owner,nameWithOwner,url,isPrivate,isFork,isArchived,visibility 2>&1)
-    fi
-
-    # Check if command was successful
-    if [ $? -ne 0 ]; then
-        log "Error: Failed to fetch repositories from GitHub"
-        echo "Error: $repos_json" >&2
-        exit 1
-    fi
-
-    # Validate JSON response
-    if ! echo "$repos_json" | jq . > /dev/null 2>&1; then
-        log "Error: Invalid JSON response from GitHub CLI"
-        echo "Response: $repos_json" >&2
-        exit 1
-    fi
-
-    log "Successfully fetched repositories"
+# Build gh command based on whether user is specified
+if [ -n "$GITHUB_USER" ]; then
+    repos_json=$(gh repo list "$GITHUB_USER" --limit 1000 --json name,owner,nameWithOwner,url,isPrivate,isFork,isArchived,visibility 2>&1)
 else
-    log "Dry run: using example repository data"
-    repos_json='[
-      {
-        "name": "example-repo1",
-        "owner": {"login": "octocat"},
-        "nameWithOwner": "octocat/example-repo1",
-        "url": "https://github.com/octocat/example-repo1",
-        "isPrivate": false,
-        "isFork": false,
-        "isArchived": false,
-        "visibility": "PUBLIC"
-      },
-      {
-        "name": "example-repo2",
-        "owner": {"login": "octocat"},
-        "nameWithOwner": "octocat/example-repo2",
-        "url": "https://github.com/octocat/example-repo2",
-        "isPrivate": true,
-        "isFork": false,
-        "isArchived": false,
-        "visibility": "PRIVATE"
-      }
-    ]'
+    repos_json=$(gh repo list --limit 1000 --json name,owner,nameWithOwner,url,isPrivate,isFork,isArchived,visibility 2>&1)
+fi
+
+# Check if command was successful
+if [ $? -ne 0 ]; then
+    log "Error: Failed to fetch repositories from GitHub"
+    echo "Error: $repos_json" >&2
+    exit 1
+fi
+
+# Validate JSON response
+if ! echo "$repos_json" | jq . > /dev/null 2>&1; then
+    log "Error: Invalid JSON response from GitHub CLI"
+    echo "Response: $repos_json" >&2
+    exit 1
+fi
+
+log "Successfully fetched repositories"
+
+if [ "$DRY_RUN" = true ]; then
+    log "Dry run mode: will preview repositories without cloning"
 fi
 
 echo ""

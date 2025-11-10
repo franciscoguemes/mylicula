@@ -102,14 +102,22 @@ When called during MyLiCuLa installation via `install.sh`, the token is automati
 
 Internally, the scripts set `GH_TOKEN` for the GitHub CLI using the provided token.
 
+### Authentication During Cloning
+
+When cloning repositories, the scripts automatically inject the PAT token into the clone URL:
+- Original URL: `https://github.com/owner/repo`
+- Modified URL: `https://token@github.com/owner/repo`
+
+This ensures git doesn't prompt for username/password during cloning. The token is never written to disk or shown in logs.
+
 ## Comparison with GitLab Scripts
 
 | Feature | GitLab Scripts | GitHub Scripts |
 |---------|---------------|----------------|
 | API Access | curl + REST API | GitHub CLI (`gh`) |
 | Authentication | PAT via `-p` param or `MYLICULA_GITLAB_PAT` | PAT via `-t` param or `MYLICULA_GITHUB_PAT` |
-| Internal Auth | HTTP header | `GH_TOKEN` env var |
-| Structure | namespace/project | owner/repository |
+| Internal Auth | HTTP header (injected in URL) | HTTP header (injected in URL) |
+| Structure | Flat (all repos in target dir) | Flat (all repos in target dir) |
 | Filtering | Groups (include/exclude) | Owners (include/exclude) |
 | Additional Filters | N/A | Skip forks, skip archived |
 | Pagination | Manual (API pages) | Automatic (handled by `gh`) |
@@ -117,22 +125,18 @@ Internally, the scripts set `GH_TOKEN` for the GitHub CLI using the provided tok
 
 ## Directory Structure
 
-When cloning repositories, the scripts create the following structure:
+When cloning repositories, the scripts create a flat structure directly in the target directory:
 
 ```
 root_directory/
-├── owner1/
-│   ├── repo1/
-│   ├── repo2/
-│   └── repo3/
-├── owner2/
-│   ├── repo1/
-│   └── repo2/
-└── owner3/
-    └── repo1/
+├── repo1/
+├── repo2/
+├── repo3/
+├── repo4/
+└── repo5/
 ```
 
-This mirrors the GitHub structure where repositories belong to owners (users or organizations).
+All repositories are cloned directly into the target directory without creating owner subdirectories. This is ideal when you're cloning repositories from a single user/organization.
 
 ## Logging
 
@@ -158,14 +162,17 @@ The scripts include comprehensive error handling:
 ## Dry-Run Mode
 
 Both scripts support `--dry-run` mode:
-- **list_GitHub_repositories.sh**: Returns example JSON data
-- **clone_GitHub_repositories.sh**: Shows what would be cloned without actually cloning
+- **list_GitHub_repositories.sh**: Fetches and displays real repository data (no changes made)
+- **clone_GitHub_repositories.sh**: Fetches real repository data and shows what would be cloned without actually cloning
+
+**Important**: Dry-run mode now fetches real data from GitHub. This allows you to see your actual repositories and verify what would be cloned before making any changes.
 
 Use dry-run to:
-- Test script behavior without making changes
-- Preview directory structure
-- Verify filtering options
-- Test configuration
+- Preview your actual repositories before cloning
+- Test script behavior without making changes to disk
+- Preview directory structure that will be created
+- Verify filtering options (--skip-forks, --skip-archived, etc.)
+- Test authentication and credentials
 
 ## Examples
 
