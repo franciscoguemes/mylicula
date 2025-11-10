@@ -28,5 +28,5 @@ mkdir -p /usr/lib/jvm
 mkdir -p ${HOME}/{Downloads,Templates,Documents/{Mega,${COMPANY}},Books,Ebooks,Videos,Music,Pictures}
 mkdir -p ${HOME}/{bin,.config}
 mkdir -p ${HOME}/development/{flyway,eclipse,netbeans,intellij-community}
-mkdir -p ${HOME}/git/{${COMPANY},${USER},other}
+mkdir -p ${HOME}/git/{${COMPANY},{${USER}/gitlab,${USER}/github},other}
 mkdir -p ${HOME}/workspaces/{eclipse,netbeans,intellij}
