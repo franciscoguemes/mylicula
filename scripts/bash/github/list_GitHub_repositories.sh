@@ -174,60 +174,35 @@ if [ "$DEBUG" = true ]; then
 fi
 
 # Fetch repositories from GitHub
-if [ "$DRY_RUN" = false ]; then
-    log "Fetching repositories from GitHub..."
+log "Fetching repositories from GitHub..."
 
-    # Build gh command based on whether user is specified
-    if [ -n "$GITHUB_USER" ]; then
-        # List repos for specific user
-        response=$(gh repo list "$GITHUB_USER" --limit 1000 --json name,owner,nameWithOwner,url,isPrivate,isFork,isArchived,visibility 2>&1)
-    else
-        # List repos for authenticated user
-        response=$(gh repo list --limit 1000 --json name,owner,nameWithOwner,url,isPrivate,isFork,isArchived,visibility 2>&1)
-    fi
-
-    # Check if command was successful
-    if [ $? -ne 0 ]; then
-        log "Error: Failed to fetch repositories from GitHub"
-        echo "Error: $response" >&2
-        exit 1
-    fi
-
-    # Validate JSON response
-    if ! echo "$response" | jq . > /dev/null 2>&1; then
-        log "Error: Invalid JSON response from GitHub CLI"
-        echo "Response: $response" >&2
-        exit 1
-    fi
-
-    log "Successfully fetched repositories"
+# Build gh command based on whether user is specified
+if [ -n "$GITHUB_USER" ]; then
+    # List repos for specific user
+    response=$(gh repo list "$GITHUB_USER" --limit 1000 --json name,owner,nameWithOwner,url,isPrivate,isFork,isArchived,visibility 2>&1)
 else
-    log "Dry run: would fetch repositories from GitHub"
-    log "Generating example output..."
+    # List repos for authenticated user
+    response=$(gh repo list --limit 1000 --json name,owner,nameWithOwner,url,isPrivate,isFork,isArchived,visibility 2>&1)
+fi
 
-    # Example JSON response for dry-run
-    response='[
-      {
-        "name": "example-repo1",
-        "owner": {"login": "octocat"},
-        "nameWithOwner": "octocat/example-repo1",
-        "url": "https://github.com/octocat/example-repo1",
-        "isPrivate": false,
-        "isFork": false,
-        "isArchived": false,
-        "visibility": "PUBLIC"
-      },
-      {
-        "name": "example-repo2",
-        "owner": {"login": "octocat"},
-        "nameWithOwner": "octocat/example-repo2",
-        "url": "https://github.com/octocat/example-repo2",
-        "isPrivate": true,
-        "isFork": false,
-        "isArchived": false,
-        "visibility": "PRIVATE"
-      }
-    ]'
+# Check if command was successful
+if [ $? -ne 0 ]; then
+    log "Error: Failed to fetch repositories from GitHub"
+    echo "Error: $response" >&2
+    exit 1
+fi
+
+# Validate JSON response
+if ! echo "$response" | jq . > /dev/null 2>&1; then
+    log "Error: Invalid JSON response from GitHub CLI"
+    echo "Response: $response" >&2
+    exit 1
+fi
+
+log "Successfully fetched repositories"
+
+if [ "$DRY_RUN" = true ]; then
+    log "Dry run mode: fetched real repository data (no changes made)"
 fi
 
 # Output based on the -n flag
