@@ -9,7 +9,7 @@ Alternatively you can create the symbolic links manually. The following examples
 PATH_TO_PROJECT=~/mylicULA
 sudo ln -s $PATH_TO_PROJECT/scripts/connect_to_Zulutrade_VPN.sh /usr/local/bin/connect_to_Zulutrade_VPN
 sudo ln -s $PATH_TO_PROJECT/scripts/disconnect_from_Zulutrade_VPN.sh /usr/local/bin/disconnect_from_Zulutrade_VPN
-sudo ln -s $PATH_TO_PROJECT/scripts/zulutrade_config.sh /usr/local/bin/zulutrade_config.sh
+sudo ln -s $PATH_TO_PROJECT/scripts/zulutrade_maven_config.sh /usr/local/bin/zulutrade_maven_config.sh
 ```
 
 On top of the link, you may want to create a keyboard shortcut in the OS, so you can execute the script
