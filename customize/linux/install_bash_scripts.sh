@@ -61,8 +61,13 @@ process_files() {
 
     echo "${COLOR_BLUE}[INFO]${COLOR_RESET} Installing bash scripts from: $dir"
 
-    # Iterate over each file in the specified directory
+    # Iterate over each file in the specified directory (only direct children, not subdirectories)
     for file in "$dir"/*; do
+        # Skip if it's a directory
+        if [ -d "$file" ]; then
+            continue
+        fi
+
         # Ensure it's a regular file (not a directory)
         if [ -f "$file" ]; then
             filename=$(basename "$file")
@@ -95,6 +100,37 @@ process_files() {
 # Run the process for bash scripts directory
 process_files "$BASH_DIR"
 
+#==================================================================================================
+# Install traverse.sh separately (main script with subdirectory dependencies)
+#==================================================================================================
+echo ""
+echo "${COLOR_BLUE}[INFO]${COLOR_RESET} Installing traverse.sh (with subdirectory helpers)..."
+
+TRAVERSE_SCRIPT="$BASH_DIR/traverse/traverse.sh"
+if [ -f "$TRAVERSE_SCRIPT" ]; then
+    # Check if the file has execute permission, if not add it
+    if [ ! -x "$TRAVERSE_SCRIPT" ]; then
+        echo "${COLOR_YELLOW}[INFO]${COLOR_RESET} Setting execute permissions for traverse.sh"
+        chmod +x "$TRAVERSE_SCRIPT" || {
+            echo "${COLOR_RED}[ERROR]${COLOR_RESET} Failed to set execute permissions for traverse.sh"
+            ((error_count++))
+        }
+    fi
+
+    # Create symlink for traverse.sh
+    link_path="$BIN_DIR/traverse.sh"
+    if create_symlink "$TRAVERSE_SCRIPT" "$link_path" true; then
+        echo "${COLOR_GREEN}[SUCCESS]${COLOR_RESET} traverse.sh installed successfully"
+        echo "${COLOR_BLUE}[INFO]${COLOR_RESET} Helper directories: $BASH_DIR/traverse/filters/ and $BASH_DIR/traverse/executioners/"
+    else
+        echo "${COLOR_RED}[ERROR]${COLOR_RESET} Failed to install traverse.sh"
+        ((error_count++))
+    fi
+else
+    echo "${COLOR_YELLOW}[SKIP]${COLOR_RESET} traverse.sh not found at $TRAVERSE_SCRIPT"
+fi
+
+echo ""
 if [ $error_count -eq 0 ]; then
     echo "${COLOR_GREEN}[SUCCESS]${COLOR_RESET} Installation completed successfully."
     exit 0
