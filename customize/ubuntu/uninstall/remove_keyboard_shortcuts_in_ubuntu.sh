@@ -46,8 +46,8 @@ SHORTCUT_DESCRIPTIONS=(
     "Text to Markdown code"
     "Find text in files"
     "Adapt URL in clipboard"
-    "Connect to Zulutrade VPN"
-    "Disconnect from Zulutrade VPN"
+    "Connect to VPN"
+    "Disconnect from VPN"
 )
 
 # Function to remove a keyboard shortcut

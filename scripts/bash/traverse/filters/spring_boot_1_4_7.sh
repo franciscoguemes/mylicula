@@ -3,7 +3,7 @@
 # Name          : spring_boot_1_4_7.sh
 # Description   : Filter script to detect if a directory is:
 #                   - A Spring Boot project version 1.4.7.
-#                   - A project with `microservices-parent` version 0.0.8 as its parent.
+#                   - A project with `microservices-parent` version 0.0.8 as its parent (You may have to adjust this to your pom.xml inheritance logic).
 # Arguments     : Directory path to check (provided as the first argument).
 # Return Code   :
 #                   0 - The directory is a matching project.
@@ -53,14 +53,14 @@ check_pom_xml() {
 
 
         # The pom.xml file uses XML namespaces `xmlns` and therefore this has to be taken into account in the queries with xmllint
-        parent_group=$(xmllint --xpath "string(//*[local-name()='parent']/*[local-name()='groupId'])" "$pom_file" 2>/dev/null)
+        #parent_group=$(xmllint --xpath "string(//*[local-name()='parent']/*[local-name()='groupId'])" "$pom_file" 2>/dev/null)
         parent_artifact=$(xmllint --xpath "string(//*[local-name()='parent']/*[local-name()='artifactId'])" "$pom_file" 2>/dev/null)
         parent_version=$(xmllint --xpath "string(//*[local-name()='parent']/*[local-name()='version'])" "$pom_file" 2>/dev/null)
 
 
         echo "Detected parent: groupId=$parent_group, artifactId=$parent_artifact, version=$parent_version"
 
-        if [[ "$parent_group" == "com.zulutrade" && "$parent_artifact" == "microservices-parent" && "$parent_version" == "0.0.8" ]]; then
+        if [[ "$parent_artifact" == "microservices-parent" && "$parent_version" == "0.0.8" ]]; then
             return 0
         fi
     fi

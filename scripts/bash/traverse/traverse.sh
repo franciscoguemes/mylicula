@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 ####################################################################################################
 # Args           :
-#                   -d, --directory     Directory to be traversed. Defaults to /$HOME/git/zulutrade/devtools/zulu-migration/zulubackend if not provided.
+#                   -d, --directory     Directory to be traversed. Defaults to $HOME if not provided.
 #                   -e, --execute       Executable scripts to run on each subdirectory. Can specify multiple executables.
 #                   -f, --filter        Filters, either as text files with directory names/full paths or as scripts. Can specify multiple filters.
 #                   -nf, --not-filter   "Not filters," either as text files with directory names/full paths or as scripts. Can specify multiple "not filters".
@@ -41,7 +41,7 @@ FILTERS_DIR="$SCRIPT_REAL_DIR/filters"
 EXECUTIONERS_DIR="$SCRIPT_REAL_DIR/executioners"
 
 # Default directory if none provided
-DEFAULT_DIR="$HOME/git/zulutrade/devtools/zulu-migration/zulubackend"
+DEFAULT_DIR="$HOME"
 LOG_FILE="/tmp/$(basename "$0").log"
 DEBUG_MODE=false
 FILTERS_ORDERED=()  # Stores both regular and "not" filters in order of appearance

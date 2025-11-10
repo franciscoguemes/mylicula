@@ -1,1 +1,1 @@
-zulutrade-gw
+MY_PROJECT_NAME

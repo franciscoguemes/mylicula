@@ -6,7 +6,7 @@
 # Output stdout  : None
 # Output stderr  : Debug or error messages.
 # Return code    : 0 if directory meets filter criteria (meets security criteria), 1 otherwise.
-# Description    : This script verifies if a Zulutrade project uses Spring Boot Security:
+# Description    : This script verifies if a Java project uses Spring Boot Security:
 #                  - The script has any of the specified Spring Security dependencies in pom.xml.
 #                  - A SecurityConfiguration.java file.
 #                  - A usage of HttpSecurity class.

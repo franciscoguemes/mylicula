@@ -3,14 +3,14 @@
 # Args           :
 #                   $1  ON or OFF (optional) - Action to perform
 #                   -h, --help  Display usage information
-# Usage          :   ./zulutrade_maven_config.sh [ON|OFF]
-#                   ./zulutrade_maven_config.sh -h
-# Output stdout  :   Status messages indicating the action performed (e.g., "Zulutrade configuration ON.")
+# Usage          :   ./maven_config_toggle.sh [ON|OFF]
+#                   ./maven_config_toggle.sh -h
+# Output stdout  :   Status messages indicating the action performed (e.g., "Custom configuration ON.")
 # Output stderr  :   Error messages if source or target files do not exist
 # Return code    :   0 on success, 1 on error
-# Description    :   This script toggles between Zulutrade and Vanilla configurations for Maven settings.
+# Description    :   This script toggles between Custom and Vanilla configurations for Maven settings.
 #                    If no argument is provided, it toggles based on the last action state stored in a file.
-#                    If "ON" is provided, it switches to the Zulutrade configuration.
+#                    If "ON" is provided, it switches to the Custom configuration.
 #                    If "OFF" is provided, it switches to the Vanilla configuration.
 # Author         : Francisco Güemes
 # Email          : francisco@franciscoguemes.com
@@ -21,27 +21,27 @@
 ####################################################################################################
 
 # Define paths
-ZULUTRADE_CONFIG_FILE="$HOME/.m2/settings.zulutrade.xml"
+CUSTOM_CONFIG_FILE="$HOME/.m2/settings.custom.xml"
 VANILLA_CONFIG_FILE="$HOME/.m2/settings.vanilla.xml"
 TARGET_FILE="$HOME/.m2/settings.xml"
-STATE_FILE="$HOME/.m2/.zulutrade_last_action_state"
+STATE_FILE="$HOME/.m2/.custom_last_action_state"
 
 # Function to display help
 show_help() {
     cat << EOF
 Usage: $(basename "$0") [ON|OFF] [-h|--help]
 
-Toggle between Zulutrade and Vanilla Maven configurations.
+Toggle between Custom and Vanilla Maven configurations.
 
 OPTIONS:
-    ON              Switch to Zulutrade configuration
+    ON              Switch to Custom configuration
     OFF             Switch to Vanilla configuration
     (no argument)   Toggle based on last state
     -h, --help      Display this help message
 
 DESCRIPTION:
     This script manages Maven settings by switching between two configurations:
-    - Zulutrade: $ZULUTRADE_CONFIG_FILE
+    - Custom: $CUSTOM_CONFIG_FILE
     - Vanilla:   $VANILLA_CONFIG_FILE
 
     The active configuration is copied to: $TARGET_FILE
@@ -49,7 +49,7 @@ DESCRIPTION:
 
 EXAMPLES:
     $(basename "$0")        # Toggle configuration
-    $(basename "$0") ON     # Switch to Zulutrade
+    $(basename "$0") ON     # Switch to Custom
     $(basename "$0") OFF    # Switch to Vanilla
 
 AUTHOR:
@@ -70,10 +70,10 @@ validate_file() {
 
 # Function to perform the ON action
 on_action() {
-    validate_file "$ZULUTRADE_CONFIG_FILE" "Source file"
-    cp "$ZULUTRADE_CONFIG_FILE" "$TARGET_FILE"
+    validate_file "$CUSTOM_CONFIG_FILE" "Source file"
+    cp "$CUSTOM_CONFIG_FILE" "$TARGET_FILE"
     echo "ON" > "$STATE_FILE"
-    echo "Zulutrade configuration ON."
+    echo "Custom configuration ON."
 }
 
 # Function to perform the OFF action
@@ -81,7 +81,7 @@ off_action() {
     validate_file "$VANILLA_CONFIG_FILE" "Source file"
     cp "$VANILLA_CONFIG_FILE" "$TARGET_FILE"
     echo "OFF" > "$STATE_FILE"
-    echo "Zulutrade configuration OFF."
+    echo "Custom configuration OFF."
 }
 
 # Function to toggle action based on last state
