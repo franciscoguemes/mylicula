@@ -23,6 +23,11 @@ appimagelauncher
 # REPO: ppa:apandada1/xournalpp-stable
 xournalpp
 
+# Gti
+# Fun command for when you miss type git command
+# REPO: ppa:mamantoha/gti
+gti
+
 # GitHub CLI
 # Command-line tool for GitHub
 # https://cli.github.com/

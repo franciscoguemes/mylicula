@@ -42,7 +42,11 @@ tree
 ncal
 figlet
 toilet
+cowsay
+cmatrix
+fortune
 wmctrl
+
 
 # Use the clipboard in the command line: https://opensource.com/article/19/7/xclip
 xclip
@@ -98,6 +102,12 @@ postgresql-client
 #****************************************************************************************************
 graphicsmagick-imagemagick-compat
 
+
+#****************************************************************************************************
+# Computer voice
+#****************************************************************************************************
+espeak
+espeak-ng-espeak
 
 #****************************************************************************************************
 # General Purpose Applications
