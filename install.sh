@@ -230,7 +230,6 @@ CONFIG[USERNAME]="${CONFIG[USERNAME]}"
 CONFIG[EMAIL]="${CONFIG[EMAIL]}"
 CONFIG[FULL_NAME]="${CONFIG[FULL_NAME]}"
 CONFIG[COMPANY]="${CONFIG[COMPANY]}"
-CONFIG[GITHUB_USER]="${CONFIG[GITHUB_USER]}"
 
 # =============================================================================
 # System Paths (auto-detected)
@@ -248,16 +247,28 @@ CONFIG[UBUNTU_VERSION]="${CONFIG[UBUNTU_VERSION]}"
 CONFIG[IS_UBUNTU]="${CONFIG[IS_UBUNTU]}"
 
 # =============================================================================
-# Secrets (Future Use)
+# Git Repository Credentials
 # =============================================================================
-# IMPORTANT: Add your secrets below (uncomment and fill in)
-#            These values will be used by scripts that need authentication
+# IMPORTANT: These credentials are used by scripts to clone repositories
+#            from GitLab and GitHub. Keep this file secure (mode 600).
+#            You can edit these values manually at any time.
 
-# GitHub Personal Access Token (for API access, private repos)
-# Generate at: https://github.com/settings/tokens
-# CONFIG[GITHUB_TOKEN]="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+# GitLab Configuration
+# Generate PAT at: https://gitlab.com/-/profile/personal_access_tokens
+# Required scope: read_repository
+CONFIG[GITLAB_USER]="${CONFIG[GITLAB_USER]}"
+CONFIG[GITLAB_PAT]="${CONFIG[GITLAB_PAT]}"
 
-# Other API keys as needed
+# GitHub Configuration
+# Generate PAT at: https://github.com/settings/tokens
+# Required scope: repo (for private repos) or public_repo (for public only)
+CONFIG[GITHUB_USER]="${CONFIG[GITHUB_USER]}"
+CONFIG[GITHUB_PAT]="${CONFIG[GITHUB_PAT]}"
+
+# =============================================================================
+# Other Secrets (Future Use)
+# =============================================================================
+# Add additional API keys or secrets below as needed
 # CONFIG[SOME_API_KEY]="your_api_key_here"
 
 EOF
@@ -283,9 +294,13 @@ collect_configuration() {
     local use_saved=false
     if load_saved_config && [[ -n "${CONFIG[USERNAME]:-}" ]]; then
         echo "Found saved configuration:"
-        echo "  Username: ${CONFIG[USERNAME]}"
-        echo "  Email:    ${CONFIG[EMAIL]}"
-        echo "  Company:  ${CONFIG[COMPANY]}"
+        echo "  Username:    ${CONFIG[USERNAME]}"
+        echo "  Email:       ${CONFIG[EMAIL]}"
+        echo "  Company:     ${CONFIG[COMPANY]}"
+        echo "  GitLab User: ${CONFIG[GITLAB_USER]:-<not set>}"
+        echo "  GitLab PAT:  ${CONFIG[GITLAB_PAT]:+<set>}${CONFIG[GITLAB_PAT]:-<not set>}"
+        echo "  GitHub User: ${CONFIG[GITHUB_USER]:-<not set>}"
+        echo "  GitHub PAT:  ${CONFIG[GITHUB_PAT]:+<set>}${CONFIG[GITHUB_PAT]:-<not set>}"
         echo ""
         if prompt_yes_no "Use saved configuration?" "y"; then
             use_saved=true
@@ -318,8 +333,33 @@ collect_configuration() {
         # Company/Organization
         CONFIG[COMPANY]=$(prompt_with_default "Company/Organization" "Personal")
 
+        echo ""
+        log_info "Git Repository Credentials (optional - can be configured later):"
+        echo ""
+        echo "These credentials are used by scripts to clone repositories from GitHub/GitLab."
+        echo "You can leave them empty now and configure them later by editing:"
+        echo "  ~/.config/mylicula/mylicula.conf"
+        echo ""
+
+        # GitLab username (optional)
+        CONFIG[GITLAB_USER]=$(prompt_with_default "GitLab username (optional)" "")
+
+        # GitLab PAT (optional)
+        echo ""
+        echo "GitLab Personal Access Token (PAT):"
+        echo "  Generate at: https://gitlab.com/-/profile/personal_access_tokens"
+        echo "  Required scope: read_repository"
+        CONFIG[GITLAB_PAT]=$(prompt_with_default "GitLab PAT (optional)" "")
+
         # GitHub username (optional)
         CONFIG[GITHUB_USER]=$(prompt_with_default "GitHub username (optional)" "${CONFIG[USERNAME]}")
+
+        # GitHub PAT (optional)
+        echo ""
+        echo "GitHub Personal Access Token (PAT):"
+        echo "  Generate at: https://github.com/settings/tokens"
+        echo "  Required scope: repo (for private repos) or public_repo (for public only)"
+        CONFIG[GITHUB_PAT]=$(prompt_with_default "GitHub PAT (optional)" "")
 
         # Add derived configuration BEFORE saving
         CONFIG[HOME]="${HOME}"
@@ -338,12 +378,15 @@ collect_configuration() {
     # Display collected configuration
     echo ""
     log_success "Configuration collected:"
-    echo "  Username:  ${CONFIG[USERNAME]}"
-    echo "  Email:     ${CONFIG[EMAIL]}"
-    echo "  Full Name: ${CONFIG[FULL_NAME]}"
-    echo "  Company:   ${CONFIG[COMPANY]}"
-    echo "  GitHub:    ${CONFIG[GITHUB_USER]}"
-    echo "  Home:      ${CONFIG[HOME]}"
+    echo "  Username:    ${CONFIG[USERNAME]}"
+    echo "  Email:       ${CONFIG[EMAIL]}"
+    echo "  Full Name:   ${CONFIG[FULL_NAME]}"
+    echo "  Company:     ${CONFIG[COMPANY]}"
+    echo "  GitLab User: ${CONFIG[GITLAB_USER]:-<not set>}"
+    echo "  GitLab PAT:  ${CONFIG[GITLAB_PAT]:+<set>}${CONFIG[GITLAB_PAT]:-<not set>}"
+    echo "  GitHub User: ${CONFIG[GITHUB_USER]:-<not set>}"
+    echo "  GitHub PAT:  ${CONFIG[GITHUB_PAT]:+<set>}${CONFIG[GITHUB_PAT]:-<not set>}"
+    echo "  Home:        ${CONFIG[HOME]}"
     echo ""
 
     # Export for use by child scripts
@@ -351,7 +394,10 @@ collect_configuration() {
     export MYLICULA_EMAIL="${CONFIG[EMAIL]}"
     export MYLICULA_FULL_NAME="${CONFIG[FULL_NAME]}"
     export MYLICULA_COMPANY="${CONFIG[COMPANY]}"
+    export MYLICULA_GITLAB_USER="${CONFIG[GITLAB_USER]}"
+    export MYLICULA_GITLAB_PAT="${CONFIG[GITLAB_PAT]}"
     export MYLICULA_GITHUB_USER="${CONFIG[GITHUB_USER]}"
+    export MYLICULA_GITHUB_PAT="${CONFIG[GITHUB_PAT]}"
 }
 
 #
