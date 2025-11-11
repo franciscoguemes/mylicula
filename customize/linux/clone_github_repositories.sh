@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 ####################################################################################################
 # Args           :
-#                   -t, --token         GitHub Personal Access Token for authentication (required)
+#                   -p, --pat           GitHub Personal Access Token for authentication (required)
 #                   -u, --user          GitHub username to filter repositories (optional)
 #                   -d, --directory     Target directory for cloning (default: $HOME/git/$USER/github)
 #                   --skip-forks        Skip forked repositories
@@ -10,8 +10,8 @@
 #                   --dry-run           Run without making any changes
 #                   -h, --help          Display this help message
 #
-# Usage          : ./clone_github_repositories.sh -t <github_token>
-#                  ./clone_github_repositories.sh -t <token> -u octocat
+# Usage          : ./clone_github_repositories.sh -p <github_token>
+#                  ./clone_github_repositories.sh -p <token> -u octocat
 #                  ./clone_github_repositories.sh --help
 #
 # Output stdout  : Cloning progress and status messages
@@ -74,12 +74,12 @@ CLONE_SCRIPT="$BASE_DIR/scripts/bash/github/clone_GitHub_repositories.sh"
 # Function to display help
 show_help() {
     cat << EOF
-Usage: $(basename "$0") -t <github_token> [options]
+Usage: $(basename "$0") -p <github_token> [options]
 
 Automatically clone all repositories from a GitHub account.
 
 OPTIONS:
-    -t, --token         GitHub Personal Access Token for authentication
+    -p, --pat           GitHub Personal Access Token for authentication
                         (required unless MYLICULA_GITHUB_PAT is set)
     -u, --user          GitHub username to filter repositories (optional)
                         If not specified, clones repositories for authenticated user
@@ -99,7 +99,7 @@ DESCRIPTION:
     user. You can filter by username, skip forks, or skip archived repositories.
 
     Configuration values can be provided in two ways:
-    1. Command-line parameters: -t <token> -u <username>
+    1. Command-line parameters: -p <token> -u <username>
     2. Environment variables: MYLICULA_GITHUB_PAT=<token> MYLICULA_GITHUB_USER=<username>
 
     When called during MyLiCuLa installation, values are read from environment
@@ -114,10 +114,10 @@ REQUIREMENTS:
 
 EXAMPLES:
     # Clone all repositories for authenticated user
-    $(basename "$0") -t ghp_xxxxxxxxxxxx
+    $(basename "$0") -p ghp_xxxxxxxxxxxx
 
     # Clone repositories for specific user
-    $(basename "$0") -t ghp_xxxxxxxxxxxx -u octocat
+    $(basename "$0") -p ghp_xxxxxxxxxxxx -u octocat
 
     # Clone using environment variables (useful during installation)
     export MYLICULA_GITHUB_PAT="ghp_xxxxxxxxxxxx"
@@ -125,13 +125,13 @@ EXAMPLES:
     $(basename "$0")
 
     # Clone to custom directory
-    $(basename "$0") -t ghp_xxxxxxxxxxxx -d /custom/path
+    $(basename "$0") -p ghp_xxxxxxxxxxxx -d /custom/path
 
     # Skip forks and archived repositories
-    $(basename "$0") -t ghp_xxxxxxxxxxxx --skip-forks --skip-archived
+    $(basename "$0") -p ghp_xxxxxxxxxxxx --skip-forks --skip-archived
 
     # Dry run to see what would be cloned
-    $(basename "$0") -t ghp_xxxxxxxxxxxx --dry-run
+    $(basename "$0") -p ghp_xxxxxxxxxxxx --dry-run
 
 NOTES:
     - The target directory will be created if it doesn't exist
@@ -147,7 +147,7 @@ EOF
 # Parse command line arguments
 while [[ "$#" -gt 0 ]]; do
     case $1 in
-        -t|--token) GITHUB_TOKEN="$2"; shift ;;
+        -p|--pat) GITHUB_TOKEN="$2"; shift ;;
         -d|--directory) TARGET_DIR="$2"; shift ;;
         -u|--user) GITHUB_USER="$2"; shift ;;
         --skip-forks) SKIP_FORKS=true ;;
@@ -165,7 +165,7 @@ if [ -z "$GITHUB_TOKEN" ]; then
     echo "Error: GitHub Personal Access Token (PAT) is required." >&2
     echo "" >&2
     echo "Provide the token in one of two ways:" >&2
-    echo "  1. Command-line parameter: -t <token>" >&2
+    echo "  1. Command-line parameter: -p <token>" >&2
     echo "  2. Environment variable: export MYLICULA_GITHUB_PAT=<token>" >&2
     echo "" >&2
     show_help
@@ -215,7 +215,7 @@ echo ""
 
 # Build command arguments
 CMD_ARGS=()
-CMD_ARGS+=("-t" "$GITHUB_TOKEN")
+CMD_ARGS+=("-p" "$GITHUB_TOKEN")
 CMD_ARGS+=("-d" "$TARGET_DIR")
 
 # If a specific GitHub user is set, use it to filter repositories

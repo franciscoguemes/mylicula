@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 ####################################################################################################
 #Args           :
-#                   -t, --token           GitHub Personal Access Token (PAT) for authentication
+#                   -p, --pat             GitHub Personal Access Token (PAT) for authentication
 #                   -d, --directory       Root directory where repositories will be cloned
 #                   -u, --user            GitHub username to clone repositories from (optional, defaults to authenticated user)
 #                   -i, --include-owners  Owner names to include (comma-separated). Only repos from these owners will be cloned
@@ -11,8 +11,8 @@
 #                   --debug               Enable debug logging
 #                   --dry-run             Run the script without generating any changes
 #                   -h, --help            Display this help message
-#Usage          :   ./clone_GitHub_repositories.sh -t <github_token> -d <root_directory>
-#                   ./clone_GitHub_repositories.sh -t <token> -d ~/repos -u octocat
+#Usage          :   ./clone_GitHub_repositories.sh -p <github_token> -d <root_directory>
+#                   ./clone_GitHub_repositories.sh -p <token> -d ~/repos -u octocat
 #                   ./clone_GitHub_repositories.sh --help
 #Output stdout  :   Cloning status of GitHub repositories
 #Output stderr  :   Error messages if any issues occur
@@ -56,12 +56,12 @@ log() {
 # Function to display help
 show_help() {
     cat << EOF
-Usage: $(basename "$0") -t <github_token> -d <root_directory> [options]
+Usage: $(basename "$0") -p <github_token> -d <root_directory> [options]
 
 Clone all repositories from a GitHub account maintaining owner/repository structure.
 
 OPTIONS:
-    -t, --token           GitHub Personal Access Token for authentication
+    -p, --pat             GitHub Personal Access Token for authentication
                           (required unless MYLICULA_GITHUB_PAT is set)
     -d, --directory       Root directory where repositories will be cloned (required)
     -u, --user            GitHub username to clone repositories from (optional)
@@ -85,7 +85,7 @@ DESCRIPTION:
     making it easy to maintain the same structure locally as on GitHub.
 
     Configuration values can be provided in two ways:
-    1. Command-line parameter: -t <token>
+    1. Command-line parameter: -p <token>
     2. Environment variable: MYLICULA_GITHUB_PAT=<token>
 
     When called during MyLiCuLa installation, values are read from environment
@@ -101,23 +101,23 @@ REQUIREMENTS:
 
 EXAMPLES:
     # Clone all repositories using command-line parameter
-    $(basename "$0") -t ghp_xxxxxxxxxxxx -d ~/github-repos
+    $(basename "$0") -p ghp_xxxxxxxxxxxx -d ~/github-repos
 
     # Clone using environment variable (useful during installation)
     export MYLICULA_GITHUB_PAT="ghp_xxxxxxxxxxxx"
     $(basename "$0") -d ~/github-repos
 
     # Clone repositories for specific user
-    $(basename "$0") -t ghp_xxxxxxxxxxxx -d ~/repos -u octocat
+    $(basename "$0") -p ghp_xxxxxxxxxxxx -d ~/repos -u octocat
 
     # Clone only from specific owners
-    $(basename "$0") -t ghp_xxxxxxxxxxxx -d ~/repos -i "octocat,github"
+    $(basename "$0") -p ghp_xxxxxxxxxxxx -d ~/repos -i "octocat,github"
 
     # Skip forks and archived repositories
-    $(basename "$0") -t ghp_xxxxxxxxxxxx -d ~/repos --skip-forks --skip-archived
+    $(basename "$0") -p ghp_xxxxxxxxxxxx -d ~/repos --skip-forks --skip-archived
 
     # Dry run to see what would be cloned
-    $(basename "$0") -t ghp_xxxxxxxxxxxx -d ~/repos --dry-run
+    $(basename "$0") -p ghp_xxxxxxxxxxxx -d ~/repos --dry-run
 
 NOTES:
     - The target directory will be created if it doesn't exist
@@ -220,7 +220,7 @@ clone_repositories() {
 # Parse arguments
 while [[ "$#" -gt 0 ]]; do
     case "$1" in
-        -t|--token) GITHUB_TOKEN="$2"; shift ;;
+        -p|--pat) GITHUB_TOKEN="$2"; shift ;;
         -d|--directory) ROOT_DIR="$2"; shift ;;
         -u|--user) GITHUB_USER="$2"; shift ;;
         -i|--include-owners)
@@ -253,7 +253,7 @@ if [ -z "$GITHUB_TOKEN" ] || [ -z "$ROOT_DIR" ]; then
         echo "Error: GitHub Personal Access Token (PAT) is required." >&2
         echo "" >&2
         echo "Provide the token in one of two ways:" >&2
-        echo "  1. Command-line parameter: -t <token>" >&2
+        echo "  1. Command-line parameter: -p <token>" >&2
         echo "  2. Environment variable: export MYLICULA_GITHUB_PAT=<token>" >&2
         echo "" >&2
     fi

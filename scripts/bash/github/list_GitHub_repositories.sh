@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 ####################################################################################################
 #Args           :
-#                   -t, --token       GitHub Personal Access Token (PAT) for authentication
+#                   -p, --pat       GitHub Personal Access Token (PAT) for authentication
 #                   -u, --user        GitHub username to list repositories from (optional, defaults to authenticated user)
 #                   -n, --names       If included, list only repository names; otherwise, return full JSON
 #                   --debug           Enable debug logging
 #                   --dry-run         Run the script without generating any changes
 #                   -h, --help        Display this help message
-#Usage          :   ./list_GitHub_repositories.sh -t <github_token> [-u <username>] [-n]
+#Usage          :   ./list_GitHub_repositories.sh -p <github_token> [-u <username>] [-n]
 #Output stdout  :   List of GitHub repositories the user has access to or the full JSON response
 #Output stderr  :   Error messages if any issues occur
 #Return code    :   0 on success, 1 on failure
@@ -41,12 +41,12 @@ log() {
 # Function to display help
 show_help() {
     cat << EOF
-Usage: $(basename "$0") -t <github_token> [options]
+Usage: $(basename "$0") -p <github_token> [options]
 
 List all repositories from a GitHub account.
 
 OPTIONS:
-    -t, --token       GitHub Personal Access Token for authentication
+    -p, --pat       GitHub Personal Access Token for authentication
                       (required unless MYLICULA_GITHUB_PAT is set)
     -u, --user        GitHub username to list repositories from (optional)
                       If not specified, lists repositories for authenticated user
@@ -61,7 +61,7 @@ DESCRIPTION:
     authenticated user or for a specific GitHub username.
 
     The PAT token can be provided in two ways:
-    1. Command-line parameter: -t <token>
+    1. Command-line parameter: -p <token>
     2. Environment variable: MYLICULA_GITHUB_PAT=<token>
 
     When called during MyLiCuLa installation, the token is read from the
@@ -73,20 +73,20 @@ REQUIREMENTS:
 
 EXAMPLES:
     # List all repositories using command-line parameter
-    $(basename "$0") -t ghp_xxxxxxxxxxxx
+    $(basename "$0") -p ghp_xxxxxxxxxxxx
 
     # List using environment variable (useful during installation)
     export MYLICULA_GITHUB_PAT="ghp_xxxxxxxxxxxx"
     $(basename "$0")
 
     # List repositories for specific user
-    $(basename "$0") -t ghp_xxxxxxxxxxxx -u octocat
+    $(basename "$0") -p ghp_xxxxxxxxxxxx -u octocat
 
     # List only repository names
-    $(basename "$0") -t ghp_xxxxxxxxxxxx -n
+    $(basename "$0") -p ghp_xxxxxxxxxxxx -n
 
     # Dry run mode
-    $(basename "$0") -t ghp_xxxxxxxxxxxx --dry-run
+    $(basename "$0") -p ghp_xxxxxxxxxxxx --dry-run
 
 AUTHOR:
     Francisco Güemes <francisco@franciscoguemes.com>
@@ -96,7 +96,7 @@ EOF
 # Parse arguments
 while [[ "$#" -gt 0 ]]; do
     case "$1" in
-        -t|--token) GITHUB_TOKEN="$2"; shift ;;
+        -p|--pat) GITHUB_TOKEN="$2"; shift ;;
         -u|--user) GITHUB_USER="$2"; shift ;;
         -n|--names) LIST_NAMES=true ;;
         --debug) DEBUG=true ;;
@@ -112,7 +112,7 @@ if [ -z "$GITHUB_TOKEN" ]; then
     echo "Error: GitHub Personal Access Token (PAT) is required." >&2
     echo "" >&2
     echo "Provide the token in one of two ways:" >&2
-    echo "  1. Command-line parameter: -t <token>" >&2
+    echo "  1. Command-line parameter: -p <token>" >&2
     echo "  2. Environment variable: export MYLICULA_GITHUB_PAT=<token>" >&2
     echo "" >&2
     show_help
