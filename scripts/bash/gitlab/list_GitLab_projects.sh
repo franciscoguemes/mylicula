@@ -47,17 +47,57 @@ fetch_projects() {
     local pat_token="$2"
     local all_projects="[]" # Initialize an empty JSON array
     local page=1
+    local max_pages=100  # Safety limit to prevent infinite loops
 
     # Loop through pages to get all projects
-    while true; do
-        local api_url="$url/api/v4/projects?simple=true&per_page=100&page=$page"
+    while [ $page -le $max_pages ]; do
+        # Use owned=true to get only projects owned by the authenticated user
+        # This prevents fetching thousands of public/group projects
+        local api_url="$url/api/v4/projects?owned=true&per_page=100&page=$page"
         log "Fetching page $page --> $api_url"
-        response=$(curl --silent --header "PRIVATE-TOKEN: $pat_token" "$api_url")
+
+        # Only show pagination details in debug mode
+        if [ "$DEBUG" = true ]; then
+            echo "Fetching page $page from GitLab API..." >&2
+        fi
+
+        response=$(curl --silent --max-time 30 --header "PRIVATE-TOKEN: $pat_token" "$api_url")
+
+        # Check for curl errors
+        if [ $? -ne 0 ]; then
+            echo "Error: Failed to fetch from GitLab API (curl timeout or connection error)" >&2
+            log "Error: curl failed for $api_url"
+            return 1
+        fi
+
+        # Validate that response is a JSON array
+        if ! echo "$response" | jq -e 'type == "array"' > /dev/null 2>&1; then
+            echo "Error: GitLab API returned non-array response. Possible authentication issue." >&2
+            log "Error: Non-array response from API: $response"
+            # Check if it's an error message
+            if echo "$response" | jq -e '.message' > /dev/null 2>&1; then
+                local error_msg=$(echo "$response" | jq -r '.message')
+                echo "GitLab API error: $error_msg" >&2
+            fi
+            return 1
+        fi
+
+        # Get the array length
+        local length=$(echo "$response" | jq '. | length')
 
         # Break the loop if no more projects are returned
-        if [ "$(echo "$response" | jq '. | length')" -eq 0 ]; then
+        if [ "$length" -eq 0 ]; then
+            log "No more projects on page $page, stopping pagination"
+            if [ "$DEBUG" = true ]; then
+                echo "No more projects found. Total pages fetched: $((page - 1))" >&2
+            fi
             break
         fi
+
+        if [ "$DEBUG" = true ]; then
+            echo "  → Found $length projects on page $page" >&2
+        fi
+        log "Found $length projects on page $page"
 
         # Append the current page of projects to the all_projects array
         all_projects=$(echo "$all_projects" | jq --argjson new_projects "$response" '. + $new_projects')
@@ -65,6 +105,11 @@ fetch_projects() {
         # Increment the page number
         page=$((page + 1))
     done
+
+    if [ $page -gt $max_pages ]; then
+        echo "Warning: Reached maximum page limit ($max_pages). There may be more projects." >&2
+        log "Warning: Reached max_pages limit"
+    fi
 
     echo "$all_projects"
 }
@@ -111,7 +156,10 @@ log "Starting script execution."
 
 # Dry run message
 if [ "$DRY_RUN" = true ]; then
-    log "Dry run mode enabled. No changes will be made."
+    log "Dry run mode enabled. Making API calls to fetch project list, but no cloning will occur."
+    if [ "$DEBUG" = true ]; then
+        echo "Dry run mode: Fetching project list from GitLab API..." >&2
+    fi
 fi
 
 # Connect to GitLab and list projects
@@ -120,27 +168,36 @@ if [ "$DEBUG" = true ]; then
 fi
 
 # Fetch projects from GitLab
-if [ "$DRY_RUN" = false ]; then
-    log "Fetching projects from GitLab... $GITLAB_URL/api/v4/projects"
-    response=$(fetch_projects "$GITLAB_URL" "$PAT_TOKEN")
+log "Fetching projects from GitLab... $GITLAB_URL/api/v4/projects"
+if [ "$DEBUG" = false ]; then
+    echo "Fetching repositories from GitLab..." >&2
+fi
+response=$(fetch_projects "$GITLAB_URL" "$PAT_TOKEN")
 
-    # Check if the response is valid JSON
-    if ! echo "$response" | jq . > /dev/null 2>&1; then
-        log "Error: Invalid response from GitLab API."
-        echo "Response: $response" >&2  # Redirect to stderr
-        exit 1
-    fi
+# Check if fetch_projects failed
+if [ $? -ne 0 ] || [ -z "$response" ]; then
+    log "Error: Failed to fetch projects from GitLab"
+    echo "Error: Failed to fetch projects from GitLab. Check your PAT token and network connection." >&2
+    exit 1
+fi
 
-    # Check if the response contains an error message
-    if echo "$response" | jq -e 'has("message")' > /dev/null 2>&1; then
-        log "Error: $response"
-        exit 1
-    fi
-else
-    log "Dry run: would fetch projects from GitLab."
-    log "Generating an example of output..."
-    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-    response="$(cat "$SCRIPT_DIR/projects-example.json")"  # Assuming you have an example JSON file
+# Check if the response is valid JSON
+if ! echo "$response" | jq . > /dev/null 2>&1; then
+    log "Error: Invalid response from GitLab API."
+    echo "Response: $response" >&2  # Redirect to stderr
+    exit 1
+fi
+
+# Check if the response contains an error message
+if echo "$response" | jq -e 'has("message")' > /dev/null 2>&1; then
+    log "Error: $response"
+    exit 1
+fi
+
+log "Successfully fetched projects from GitLab"
+
+if [ "$DRY_RUN" = true ]; then
+    log "Dry run mode: fetched real project data (no changes made)"
 fi
 
 # Output based on the -n flag

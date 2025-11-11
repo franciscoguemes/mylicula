@@ -3,14 +3,14 @@
 # Args           :
 #                   -g, --gitlab-url    GitLab URL (default: https://gitlab.com)
 #                   -p, --pat           Personal Access Token for GitLab authentication (required)
-#                   -u, --user          GitLab username to clone repositories from (required)
+#                   -u, --user          GitLab username to filter repositories (optional)
 #                   -d, --directory     Target directory for cloning (default: $HOME/git/$USER/gitlab)
 #                   --debug             Enable debug logging
 #                   --dry-run           Run without making any changes
 #                   -h, --help          Display this help message
 #
-# Usage          : ./clone_gitlab_repositories.sh -p <pat_token> -u <gitlab_username>
-#                  ./clone_gitlab_repositories.sh -g https://gitlab.com -p <token> -u franciscoguemes
+# Usage          : ./clone_gitlab_repositories.sh -p <pat_token>
+#                  ./clone_gitlab_repositories.sh -p <token> -u franciscoguemes
 #                  ./clone_gitlab_repositories.sh --help
 #
 # Output stdout  : Cloning progress and status messages
@@ -22,9 +22,9 @@
 #                  from the scripts/bash/gitlab/ directory.
 #
 #                  The script will:
-#                  - Fetch all projects from the specified GitLab account
-#                  - Clone them into the target directory
-#                  - Reproduce the GitLab directory structure locally
+#                  - Fetch projects owned by the authenticated user (or filtered by username)
+#                  - Clone them preserving group/organization hierarchy (personal repos at root)
+#                  - By default, only OWNED projects are fetched to avoid thousands of accessible projects
 #
 # Author         : Francisco Güemes
 # Email          : francisco@franciscoguemes.com
@@ -72,7 +72,7 @@ CLONE_SCRIPT="$BASE_DIR/scripts/bash/gitlab/clone_GitLab_projects.sh"
 # Function to display help
 show_help() {
     cat << EOF
-Usage: $(basename "$0") -p <pat_token> -u <gitlab_username> [options]
+Usage: $(basename "$0") -p <pat_token> [options]
 
 Automatically clone all repositories from a GitLab account.
 
@@ -80,8 +80,8 @@ OPTIONS:
     -g, --gitlab-url    GitLab URL (default: https://gitlab.com)
     -p, --pat           Personal Access Token for GitLab authentication
                         (required unless MYLICULA_GITLAB_PAT is set)
-    -u, --user          GitLab username to filter repositories
-                        (required unless MYLICULA_GITLAB_USER is set)
+    -u, --user          GitLab username to filter repositories (optional)
+                        If not specified, clones ALL repositories you have access to
     -d, --directory     Target directory for cloning (default: \$HOME/git/\$USER/gitlab)
     --debug             Enable debug logging
     --dry-run           Run without making any changes
@@ -90,10 +90,22 @@ OPTIONS:
 DESCRIPTION:
     This script automatically clones all repositories from a GitLab account
     into a specified directory structure. It uses the GitLab API to fetch
-    all projects and clones them maintaining the GitLab group structure.
+    all projects and clones them preserving the GitLab group/organization hierarchy.
 
-    The script creates a directory structure matching your GitLab organization,
-    making it easy to maintain the same structure locally as on GitLab.
+    Directory structure examples:
+    - Personal repos (single-level namespace): target_directory/docker
+    - Group repos (multi-level namespace): target_directory/growth5875130/professional/ai
+
+    Personal repositories (where namespace is just your username) are cloned
+    directly to the target directory. Group/organization repositories maintain
+    their full hierarchical path.
+
+    By default (without -u), the script clones only repositories OWNED by the
+    authenticated user (the owner of the PAT token). This prevents fetching
+    thousands of public or group projects you may have access to.
+
+    If you specify a GitLab username with -u, only repositories from that specific
+    user/namespace will be cloned.
 
     Configuration values can be provided in two ways:
     1. Command-line parameters: -p <token> -u <username>
@@ -110,12 +122,15 @@ REQUIREMENTS:
     - git (for cloning)
 
 EXAMPLES:
-    # Clone all repositories using command-line parameters
+    # Clone all repositories OWNED by the authenticated user
+    $(basename "$0") -p glpat-xxxxxxxxxxxx
+
+    # Clone only repositories from specific user/namespace
     $(basename "$0") -p glpat-xxxxxxxxxxxx -u franciscoguemes
 
     # Clone using environment variables (useful during installation)
     export MYLICULA_GITLAB_PAT="glpat-xxxxxxxxxxxx"
-    export MYLICULA_GITLAB_USER="franciscoguemes"
+    export MYLICULA_GITLAB_USER="franciscoguemes"  # Optional
     $(basename "$0")
 
     # Clone from specific GitLab instance
@@ -123,10 +138,6 @@ EXAMPLES:
 
     # Clone to custom directory
     $(basename "$0") -p glpat-xxxxxxxxxxxx -d /custom/path
-
-    # Override environment variable with command-line parameter
-    export MYLICULA_GITLAB_USER="user1"
-    $(basename "$0") -p glpat-xxxxxxxxxxxx -u user2  # Will use user2
 
     # Dry run to see what would be cloned
     $(basename "$0") -p glpat-xxxxxxxxxxxx --dry-run
@@ -168,18 +179,6 @@ if [ -z "$PAT_TOKEN" ]; then
     exit 1
 fi
 
-# Check if GitLab user is provided (either via parameter or environment variable)
-if [ -z "$GITLAB_USER" ]; then
-    echo "Error: GitLab username is required." >&2
-    echo "" >&2
-    echo "Provide the username in one of two ways:" >&2
-    echo "  1. Command-line parameter: -u <username>" >&2
-    echo "  2. Environment variable: export MYLICULA_GITLAB_USER=<username>" >&2
-    echo "" >&2
-    show_help
-    exit 1
-fi
-
 # Check if clone script exists
 if [ ! -f "$CLONE_SCRIPT" ]; then
     echo "Error: Clone script not found at: $CLONE_SCRIPT" >&2
@@ -208,7 +207,12 @@ echo "============================================"
 echo "GitLab Repository Cloning"
 echo "============================================"
 echo "GitLab URL:       $GITLAB_URL"
-echo "GitLab User:      $GITLAB_USER"
+echo "Authentication:   PAT token"
+if [ -n "$GITLAB_USER" ]; then
+    echo "Filter:           Repositories from user/namespace '$GITLAB_USER'"
+else
+    echo "Filter:           Owned repositories only (authenticated user)"
+fi
 echo "Target Directory: $TARGET_DIR"
 echo "Debug Mode:       $DEBUG"
 echo "Dry Run:          $DRY_RUN"
@@ -238,14 +242,9 @@ fi
 echo "Starting repository cloning..."
 echo ""
 
-if [ "$DRY_RUN" = true ]; then
-    echo "[DRY-RUN] Would execute:"
-    echo "$CLONE_SCRIPT ${CMD_ARGS[@]}"
-    echo ""
-    echo "Note: Dry run mode. No actual cloning will occur."
-else
-    "$CLONE_SCRIPT" "${CMD_ARGS[@]}"
-fi
+# Always execute the clone script - it handles dry-run internally
+# This ensures users see what repositories would be cloned
+"$CLONE_SCRIPT" "${CMD_ARGS[@]}"
 
 echo ""
 echo "============================================"
