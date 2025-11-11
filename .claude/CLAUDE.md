@@ -18,32 +18,32 @@ Define in `.claude/commands/`:
 - `/check-syntax` - Validate bash syntax for all scripts
 
 ## Script Development Workflow
-1. Identify if it's generic Linux or Ubuntu-specific
-2. Create script in `in_review/linux/` or `in_review/ubuntu/`
-3. Follow conventions from existing production scripts in `customize/`
+1. Determine script type: installation (`setup/`), uninstall (`uninstall/`), or resources (`resources/`)
+2. Create script in `in_review/` directory
+3. Follow conventions from existing production scripts in `setup/`
 4. Add documentation header describing purpose and usage
 5. Add function documentation for all functions
 6. Implement your customization logic
-7. Test syntax: `bash -n in_review/linux/your_script.sh` or `in_review/ubuntu/`
-8. Once thoroughly tested and approved, move to `customize/linux/` or `customize/ubuntu/`
+7. Test syntax: `bash -n in_review/your_script.sh`
+8. Once thoroughly tested and approved, move to appropriate production directory (`setup/`, `uninstall/`, or `resources/`)
 9. Commit with clear message about the customization being added
 
 ## Code Review Checklist
 When developing MyLiCuLa scripts, verify:
-1. Script follows conventions from existing production scripts in `customize/`
+1. Script follows conventions from existing production scripts in `setup/`
 2. Documentation header is complete and clear
 3. All functions have parameter documentation
 4. Global variable names are consistent with existing scripts
-5. Syntax passes: `bash -n in_review/**/*.sh`
+5. Syntax passes: `bash -n in_review/**/*.sh` and `bash -n setup/**/*.sh`
 6. No hardcoded paths (use interpolation: <<<KEY>>>)
 7. Interactive prompts are clear for user input
 8. Works with bash 4.0+
-9. Appropriate for either linux/ (generic) or ubuntu/ (specific)
+9. Appropriate directory: `setup/` for install, `uninstall/` for removal, `resources/` for data
 10. Aligns with General Conventions philosophy
-11. Ready to move from `in_review/` to `customize/` after approval
+11. Ready to move from `in_review/` to production after approval
 
 ## Common Patterns in MyLiCuLa Scripts
-- Convention-based approach: Follow existing patterns from `customize/` production scripts
+- Convention-based approach: Follow existing patterns from `setup/` production scripts
 - Interpolation pattern:
   ```bash
   # Configuration values to be interpolated
@@ -67,32 +67,34 @@ When developing MyLiCuLa scripts, verify:
 
 ## Installation Process Understanding
 - Main entry: `install.sh` (interactive, gathers configuration)
-- **Production environment**: Uses scripts from `customize/linux/` and `customize/ubuntu/`
+- **Production environment**: Uses scripts from `setup/` directory
+- **Resources**: Configuration files, templates, icons in `resources/` directory
+- **Uninstall**: Removal scripts in `uninstall/` directory
 - **Development/Testing**: Scripts in `in_review/` are not used in production installs
 - Dry-run mode: Files copied to `.target` directory before actual installation
 - Interpolation: Values marked with <<<KEY>>> are replaced with collected configuration
-- Linux setup: Runs generic customizations first
-- Ubuntu setup: Runs distribution-specific customizations second
+- Ubuntu-focused: No artificial linux/ubuntu split
 
 ## When Creating New Customization Scripts
-1. Identify if it's generic Linux or Ubuntu-specific
-2. **Start in staging area**: Create in `in_review/linux/` or `in_review/ubuntu/`
-3. Study existing scripts in `customize/` as examples and conventions
+1. Determine purpose: installation, uninstallation, or data/resources
+2. **Start in staging area**: Create in `in_review/` directory
+3. Study existing scripts in `setup/` as examples and conventions
 4. Add documentation header with script purpose
 5. Add all necessary interpolation points: `<<<KEY>>>`
 6. Test syntax compliance: `bash -n your_script.sh`
 7. Document in commit message what customization is being added
-8. Once tested and approved, move script to `customize/linux/` or `customize/ubuntu/`
+8. Once tested and approved, move script to appropriate production directory (`setup/`, `uninstall/`, or `resources/`)
 9. Update README.md if it's a major new feature
 
 ## File Structure Best Practices
-**Production scripts (ready for install.sh):**
-- Generic customizations: `customize/linux/`
-- Ubuntu-specific customizations: `customize/ubuntu/`
+**Production directories:**
+- Installation scripts: `setup/`
+- Uninstall scripts: `uninstall/`
+- Resources (data, configs, templates): `resources/`
+- Helper utilities: `scripts/bash/`
 
 **Development/Staging (under review):**
-- Generic customizations in review: `in_review/linux/`
-- Ubuntu-specific customizations in review: `in_review/ubuntu/`
+- All new scripts start in: `in_review/`
 - Setup scripts in review: `in_review/linux_setup.sh`, `in_review/ubuntu_setup.sh`
 - Git configurations in review: `in_review/git/`
 
@@ -107,5 +109,5 @@ When developing MyLiCuLa scripts, verify:
 - Interpolation not working: Check format is <<<KEY>>> not {{KEY}} or ${KEY}
 - Syntax errors: Run `bash -n script.sh` to identify issues
 - Test with dry-run first: Uses `.target` directory to preview changes
-- Script not being used: Check if it's in `customize/` (production) not `in_review/`
-- Conventions unclear: Study existing scripts in `customize/` directory for patterns
+- Script not being used: Check if it's in production directories (`setup/`, `uninstall/`, `resources/`) not `in_review/`
+- Conventions unclear: Study existing scripts in `setup/` directory for patterns

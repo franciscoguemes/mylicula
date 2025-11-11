@@ -67,7 +67,7 @@ else
 fi
 
 # Snap packages list file
-readonly SNAP_PACKAGES_FILE="${SCRIPT_DIR}/resources/snap/list_of_snap.txt"
+readonly SNAP_PACKAGES_FILE="${BASE_DIR}/resources/snap/list_of_snap.txt"
 
 #==================================================================================================
 # Utility Functions

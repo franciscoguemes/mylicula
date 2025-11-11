@@ -3,7 +3,7 @@
 #Args           : None - This script does not accept any arguments.
 #Usage          :   ./install_icons.sh
 #                   Run this script to install custom directory icons for Ubuntu customization.
-#                   Script must be run from its installation directory to locate resources/images/icons.
+#                   Script locates resources/icons from project root.
 #Output stdout  :   Messages indicating icon installation progress for each icon file.
 #Output stderr  :   Error messages if icon operations fail.
 #Return code    :   0 on success, non-zero on error.
@@ -11,7 +11,7 @@
 #                 script are free of royalties. Thanks to the authors of the icons:
 #                   https://imgur.com/gallery/n1js84s
 #
-#                 The script creates symbolic links from resources/images/icons to
+#                 The script creates symbolic links from resources/icons to
 #                 ~/Pictures/Ubuntu_customization/icons and sets custom icons for directories
 #                 using the gio command.
 #
@@ -58,7 +58,7 @@ fi
 
 # Configuration
 DESTINATION_DIR=${HOME}/Pictures/Ubuntu_customization/icons
-ICONS_DIR=${SCRIPT_DIR}/resources/images/icons
+ICONS_DIR=${BASE_DIR}/resources/icons
 
 # Ensure destination directory exists
 mkdir -p "$DESTINATION_DIR"

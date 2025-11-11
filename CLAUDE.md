@@ -6,15 +6,18 @@ MyLiCuLa is a customization layer for Ubuntu Linux that automates system setup t
 ## Repository Structure
 ```
 .
-├── customize/           - Production-ready customization scripts
-│   ├── linux/          - Generic Linux customizations
-│   └── ubuntu/         - Ubuntu-specific customizations
+├── setup/              - Installation and configuration scripts
+│   ├── apps/          - Application installation scripts
+│   └── *.sh           - Setup scripts
+├── uninstall/          - Uninstallation and cleanup scripts
+├── resources/          - Configuration files, templates, and data
+│   ├── apt/           - Package lists
+│   ├── icons/         - Custom icons
+│   ├── snap/          - Snap package lists
+│   └── templates/     - File templates
+├── scripts/            - Helper and utility scripts
+│   └── bash/          - Bash helper scripts
 ├── in_review/          - Scripts under review (staging area)
-│   ├── git/            - Git-related configurations (under review)
-│   ├── linux/          - Generic Linux customizations (under review)
-│   ├── linux_setup.sh  - Entry point for Linux setup (under review)
-│   ├── ubuntu/         - Ubuntu-specific customizations (under review)
-│   └── ubuntu_setup.sh - Entry point for Ubuntu setup (under review)
 ├── install.sh          - Main interactive installation script
 ├── README.md           - Project documentation
 ├── Testing.md          - Testing guidelines
@@ -31,7 +34,7 @@ MyLiCuLa is a customization layer for Ubuntu Linux that automates system setup t
 Scripts move through a review process:
 1. **Development**: Create scripts in `in_review/` directory
 2. **Review**: Scripts are tested and reviewed in `in_review/`
-3. **Production**: Once approved, scripts move to `customize/` directory
+3. **Production**: Once approved, scripts move to appropriate directories (`setup/`, `uninstall/`, or `resources/`)
 
 Follow project conventions when creating scripts:
 - Documentation header (describe purpose and usage)
@@ -42,42 +45,45 @@ Follow project conventions when creating scripts:
 
 ## Installation Process
 - Root script: `install.sh` - Interactive installation asking configuration questions
-- **Production customizations** applied from `customize/` directory:
-    1. Linux customizations (generic) from `customize/linux/`
-    2. Ubuntu customizations (specific) from `customize/ubuntu/`
+- **Production scripts** in `setup/` directory - Ready for Ubuntu installation
+- **Resources** in `resources/` directory - Configuration files, templates, icons
+- **Uninstall scripts** in `uninstall/` directory - Cleanup and removal
 - **Staging area** `in_review/` contains scripts under development/testing
 - Dry-run copies files to `.target` directory for review before installation
 - Files are interpolated during installation
 
 ## Key Commands
-- `bash -n customize/**/*.sh` - Syntax check all production scripts
+- `bash -n setup/**/*.sh` - Syntax check all setup scripts
+- `bash -n uninstall/**/*.sh` - Syntax check uninstall scripts
 - `bash -n in_review/**/*.sh` - Syntax check scripts in review
 - Check testing guidelines in `Testing.md`
-- Review existing scripts in `customize/` as examples
+- Review existing scripts in `setup/` as examples
 
 ## Git Workflow
 - Create new scripts in `in_review/` directory
-- Follow naming and documentation conventions from existing scripts in `customize/`
+- Follow naming and documentation conventions from existing scripts in `setup/`
 - Mark incomplete work with `TODO:` comments
 - Interpolation values use `<<<KEY>>>` format
-- Test thoroughly before moving scripts to `customize/`
-- Once approved/reviewed, scripts move from `in_review/` to `customize/`
+- Test thoroughly before moving scripts to production directories
+- Once approved/reviewed, scripts move from `in_review/` to appropriate production directory
 - Commit messages should indicate whether scripts are being added to review or promoted to production
 
 ## Important Notes
-- **Production scripts** live in `customize/` directory
+- **Setup scripts** live in `setup/` directory - Installation and configuration
+- **Uninstall scripts** live in `uninstall/` directory - Cleanup and removal
+- **Resources** live in `resources/` directory - Data files, configs, templates
 - **Scripts under development** stay in `in_review/` until approved
-- Scripts can be generic (Linux) or distribution-specific (Ubuntu)
+- Ubuntu-focused (no artificial linux/ubuntu split)
 - Interactive scripts ask for user input and configuration
 - Dry-run testing verifies changes before applying to system
-- Project aims for homogeneous configuration across multiple machines
-- Follow conventions from existing production scripts in `customize/`
+- Project aims for homogeneous configuration across devices
+- Follow conventions from existing production scripts in `setup/`
 
 ## Contributing
 - Fork the project for your favorite Linux distribution
 - Start new scripts in `in_review/` directory
-- Follow conventions from existing production scripts in `customize/`
+- Follow conventions from existing production scripts in `setup/`
 - Suggest improvements, scripts, or new customizations
-- Keep scripts organized in appropriate subdirectories (linux/ or ubuntu/)
+- Keep scripts organized: `setup/` for install, `uninstall/` for removal, `resources/` for data
 - Test thoroughly and document any new patterns discovered
-- Once tested and approved, scripts can be promoted to `customize/`
+- Once tested and approved, scripts can be promoted to production directories

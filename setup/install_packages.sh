@@ -71,8 +71,8 @@ else
 fi
 
 # Package list files
-readonly STANDARD_PACKAGES_FILE="${SCRIPT_DIR}/resources/apt/standard_packages.txt"
-readonly CUSTOM_PACKAGES_FILE="${SCRIPT_DIR}/resources/apt/custom_packages.txt"
+readonly STANDARD_PACKAGES_FILE="${BASE_DIR}/resources/apt/standard_packages.txt"
+readonly CUSTOM_PACKAGES_FILE="${BASE_DIR}/resources/apt/custom_packages.txt"
 
 #==================================================================================================
 # Utility Functions

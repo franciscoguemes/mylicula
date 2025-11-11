@@ -2,7 +2,7 @@
 ####################################################################################################
 # Args           :
 #                   None
-# Usage          :   ./create_keyboard_shortcuts_in_ubuntu.sh
+# Usage          :   ./setup/create_keyboard_shortcuts.sh
 # Output stdout  :   Messages indicating the creation of keyboard shortcuts.
 # Output stderr  :   Error messages if shortcut creation fails or if links are missing.
 # Return code    :   0 on success, 1 on failure.
@@ -60,7 +60,7 @@ check_links() {
     for link in "${LINKS[@]}"; do
         if [ ! -L "$INSTALL_DIR/$link" ]; then
             echo "${COLOR_RED}[ERROR]${COLOR_RESET} Symbolic link for $link does not exist in $INSTALL_DIR"
-            echo "${COLOR_YELLOW}[HINT]${COLOR_RESET} Please run: sudo customize/linux/install_bash_scripts.sh"
+            echo "${COLOR_YELLOW}[HINT]${COLOR_RESET} Please run: sudo setup/install_bash_scripts.sh"
             all_links_exist=false
         else
             echo "${COLOR_GREEN}[OK]${COLOR_RESET} Found: $link"
@@ -161,7 +161,7 @@ echo "  ${COLOR_YELLOW}View all existing custom shortcuts:${COLOR_RESET}"
 echo "    gsettings reset org.gnome.settings-daemon.plugins.media-keys custom-keybindings"
 echo ""
 echo "  ${COLOR_YELLOW}Remove shortcuts:${COLOR_RESET}"
-echo "    ./customize/ubuntu/remove_keyboard_shortcuts_in_ubuntu.sh"
+echo "    ./uninstall/remove_keyboard_shortcuts.sh"
 echo ""
 echo "  ${COLOR_YELLOW}Reset all custom shortcuts:${COLOR_RESET}"
 echo "    gsettings reset org.gnome.settings-daemon.plugins.media-keys custom-keybindings"
