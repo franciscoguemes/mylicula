@@ -14,7 +14,10 @@
 #Output stderr  :   Error messages if any issues occur.
 #Return code    :   0 on success, 1 on failure.
 #Description    :   Connects to a GitLab server, retrieves projects, and clones them into a specified directory
-#                   reproducing the directory structure of the projects in the GitLab server.
+#                   preserving the group/organization hierarchy from GitLab (personal repos at root).
+#                   Examples:
+#                     - Personal repo "docker" (namespace: franciscoguemes) → root_dir/docker
+#                     - Group repo "AI" (namespace: growth5875130/professional) → root_dir/growth5875130/professional/ai
 #                   It uses internally the list_GitLab_projects.sh script to get the projects.
 #                                                                                                                                                           
 #Author       	: Francisco Güemes                                                
@@ -57,11 +60,18 @@ clone_projects() {
     # Iterate over each project in the JSON array
     echo "$projects_json" | jq -c '.[]' | while read -r project; do
         local project_name
-        project_name=$(echo "$project" | jq -r '.name')
-#        local project_path
-#        project_path=$(echo "$project" | jq -r '.full_path')
+        project_name=$(echo "$project" | jq -r '.path')  # Use 'path' for URL-safe directory name
         local project_group
         project_group=$(echo "$project" | jq -r '.namespace.full_path')  # Get the group path
+        local project_url
+        project_url=$(echo "$project" | jq -r '.http_url_to_repo')  # Get the HTTPS clone URL
+
+        # Skip repositories scheduled for deletion
+        if [[ "$project_name" == *"deletion_scheduled"* ]]; then
+            echo "Skipping: $project_name (scheduled for deletion)"
+            log "Skipping project $project_name as it is scheduled for deletion"
+            continue
+        fi
 
         # Check if the project belongs to the specified included groups
         if [[ ${#INCLUDE_GROUPS[@]} -gt 0 ]]; then
@@ -79,33 +89,57 @@ clone_projects() {
             fi
         fi
 
-        # Create the directory structure
-        # local dir_path="$root_dir/$(dirname "$project_path")"
-        local dir_path="$root_dir/$project_group"
+        # Build the target directory path including namespace hierarchy
+        # Only include namespace if it contains a "/" (i.e., it's a group/organization path)
+        # Skip single-level namespaces (personal username repos) to avoid redundancy
+        local target_dir="$root_dir"
+        if [ -n "$project_group" ] && [[ "$project_group" == *"/"* ]]; then
+            # Multi-level namespace (group/subgroup) - use full path
+            target_dir="$root_dir/$project_group"
+        fi
+        # Single-level namespace (just username) - clone directly to root
+        local full_path="$target_dir/$project_name"
 
-        # Check if the directory already exists
-        if [ ! -d "$dir_path" ]; then
-            if [ "$DRY_RUN" = false ]; then
-                mkdir -p "$dir_path"
-                log "Created directory: $dir_path"
-            else
-                log "Dry run: would create directory: $dir_path"
+        # Check if the project already exists (exact path or abbreviated namespace)
+        local repo_exists=false
+        if [ -d "$full_path" ]; then
+            repo_exists=true
+        elif [ -n "$project_group" ] && [[ "$project_group" == *"/"* ]]; then
+            # Check for abbreviated namespace (e.g., "growth" instead of "growth5875130")
+            # Extract the top-level namespace and remove trailing numbers/special chars
+            local top_namespace=$(echo "$project_group" | cut -d'/' -f1)
+            local abbreviated_namespace=$(echo "$top_namespace" | sed 's/[0-9_-]*$//')
+
+            if [ -n "$abbreviated_namespace" ] && [ "$abbreviated_namespace" != "$top_namespace" ]; then
+                # Build path with abbreviated namespace
+                local rest_of_path=$(echo "$project_group" | cut -d'/' -f2-)
+                local abbreviated_path="$root_dir/$abbreviated_namespace/$rest_of_path/$project_name"
+
+                if [ -d "$abbreviated_path" ]; then
+                    repo_exists=true
+                    full_path="$abbreviated_path"  # Use the existing path
+                fi
             fi
-        else
-            log "Directory already exists: $dir_path"
         fi
 
-        # Check if the project already exists
-        if [ ! -d "$dir_path/$project_name" ]; then
+        if [ "$repo_exists" = false ]; then
             if [ "$DRY_RUN" = false ]; then
-                # git clone "$project_url" "$dir_path/$project_name" >> "$LOG_FILE" 2>&1
-                git clone "$project_url" "$dir_path/$project_name" 2>&1 | tee -a "$LOG_FILE"
-                log "Cloned project: $project_name into $dir_path"
+                # Create the namespace directory structure if it doesn't exist
+                mkdir -p "$target_dir"
+
+                # Modify URL to include PAT token for authentication
+                # Convert https://gitlab.com/... to https://oauth2:token@gitlab.com/...
+                local clone_url="${project_url/https:\/\//https:\/\/oauth2:${PAT_TOKEN}@}"
+
+                git clone "$clone_url" "$full_path" 2>&1 | tee -a "$LOG_FILE"
+                log "Cloned project: $project_name into $full_path"
             else
-                log "Dry run: would clone project: $project_name into $dir_path"
+                echo "[DRY-RUN] Would clone: $project_name into $full_path"
+                log "Dry run: would clone project: $project_name into $full_path"
             fi
         else
-            log "Project $project_name already exists in $dir_path, skipping clone."
+            echo "Skipping: $project_name (already exists in $full_path)"
+            log "Project $project_name already exists in $full_path, skipping clone."
         fi
     done
 }
