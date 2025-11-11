@@ -18,7 +18,7 @@
 #
 # Author: Francisco Güemes
 # Email: francisco@franciscoguemes.com
-# See also: customize/linux_setup.sh, customize/ubuntu_setup.sh
+# See also: setup/ directory for installation scripts
 
 set -euo pipefail
 

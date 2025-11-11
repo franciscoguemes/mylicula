@@ -3,7 +3,7 @@
 #Args           : None - This script does not accept any arguments.
 #Usage          :   ./install_templates.sh
 #                   Run this script to install templates for Nautilus "New Document" menu.
-#                   Script must be run from its installation directory to locate resources/templates.
+#                   Script locates resources/templates from project root.
 #Output stdout  :   Messages indicating broken links deletion and template installation progress.
 #Output stderr  :   Error messages if template operations fail.
 #Return code    :   0 on success, non-zero on error.
@@ -54,7 +54,7 @@ fi
 
 # Configuration
 DESTINATION_DIR=$HOME/Templates
-TEMPLATES_DIR=$SCRIPT_DIR/resources/templates
+TEMPLATES_DIR=$BASE_DIR/resources/templates
 
 # Ensure destination directory exists
 mkdir -p "$DESTINATION_DIR"
