@@ -1,59 +1,86 @@
 #!/usr/bin/env bash
+####################################################################################################
+#Args           :
+#                   --help, -h    Show help message
+#Usage          :   ./install.sh
+#Output stdout  :   Installation progress messages via whiptail dialogs
+#Output stderr  :   Error messages
+#Return code    :   0 on success, 1 on error
+#Description    :   Main installation script for MyLiCuLa - My Linux Custom Layer
+#                   Interactive installer using whiptail for GUI dialogs.
+#                   Manages configuration and orchestrates system customization.
 #
-# Script Name: install.sh
-# Description: Main installation script for MyLiCuLa - My Linux Custom Layer
-#              Interactive installer that collects configuration and orchestrates
-#              Linux and Ubuntu customizations for homogeneous system setup
-#
-# Args:
-#   --dry-run : Preview changes without applying them (creates .target directory)
-#   --verbose : Show detailed output during installation
-#   --help    : Show this help message
-#
-# Usage: ./install.sh [--dry-run] [--verbose]
-#
-# Output (stdout): Installation progress and results
-# Output (stderr): Error messages and warnings
-# Return code: 0 on success, non-zero on failure
-#
-# Author: Francisco Güemes
-# Email: francisco@franciscoguemes.com
-# See also: setup/ directory for installation scripts
+#Author         :   Francisco Güemes
+#Email          :   francisco@franciscoguemes.com
+#See also       :   https://github.com/franciscoguemes/mylicula
+#                   setup/ directory for installation scripts
+####################################################################################################
 
 set -euo pipefail
 
-#–––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
-# Setup and initialization
-#–––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+#==================================================================================================
+# Configuration
+#==================================================================================================
 
 # Get the directory where this script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 
-# Set and export BASE_DIR for all child scripts
-export MYLICULA_BASE_DIR="$SCRIPT_DIR"
-
-# Source common utility functions
-# shellcheck disable=SC1091
-source "${SCRIPT_DIR}/lib/common.sh"
-
-# Configuration variables (will be collected from user)
-declare -gA CONFIG
+# Configuration paths
 CONFIG_DIR="${HOME}/.config/mylicula"
 CONFIG_FILE="${CONFIG_DIR}/mylicula.conf"
 CONFIG_EXAMPLE="${SCRIPT_DIR}/resources/config/mylicula.conf.example"
+BANNER_FILE="${SCRIPT_DIR}/resources/banner/banner.txt"
 
-#–––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
-# Functions
-#–––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
+# Export base directory for child scripts
+export MYLICULA_BASE_DIR="$SCRIPT_DIR"
 
-#
-# Function: show_help
-# Description: Display help message
-# Args: None
-# Usage: show_help
-# Output (stdout): Help text
-# Return code: 0
-#
+# Colors for terminal output (when not using whiptail)
+readonly COLOR_RED='\033[0;31m'
+readonly COLOR_GREEN='\033[0;32m'
+readonly COLOR_YELLOW='\033[1;33m'
+readonly COLOR_BLUE='\033[0;34m'
+readonly COLOR_RESET='\033[0m'
+
+#==================================================================================================
+# Output Functions
+#==================================================================================================
+
+log_info() {
+    echo -e "${COLOR_BLUE}[INFO]${COLOR_RESET} $*" >&2
+}
+
+log_success() {
+    echo -e "${COLOR_GREEN}[SUCCESS]${COLOR_RESET} $*" >&2
+}
+
+log_warning() {
+    echo -e "${COLOR_YELLOW}[WARNING]${COLOR_RESET} $*" >&2
+}
+
+log_error() {
+    echo -e "${COLOR_RED}[ERROR]${COLOR_RESET} $*" >&2
+}
+
+#==================================================================================================
+# Utility Functions
+#==================================================================================================
+
+command_exists() {
+    command -v "$1" &> /dev/null
+}
+
+show_banner() {
+    if [[ -f "$BANNER_FILE" ]]; then
+        clear
+        cat "$BANNER_FILE"
+        echo ""
+        echo "    Version: 1.0.0"
+        echo "    Author: Francisco Güemes"
+        echo ""
+        sleep 2
+    fi
+}
+
 show_help() {
     cat << EOF
 MyLiCuLa - My Linux Custom Layer
@@ -62,58 +89,359 @@ Installation script to customize Linux/Ubuntu systems for homogeneity
 Usage: $0 [OPTIONS]
 
 Options:
-    --dry-run       Preview changes without applying them
-    --verbose       Show detailed output during installation
-    --help          Show this help message
+    -h, --help          Show this help message
 
 Description:
-    This script collects configuration information and orchestrates
-    the installation of customizations across your Linux system.
+    This script manages the installation of MyLiCuLa customizations.
+    It uses whiptail for interactive dialogs and guides you through
+    the configuration and installation process.
 
-    The installation process:
-    1. Collects user configuration (username, email, company)
-    2. Applies generic Linux customizations
-    3. Applies Ubuntu-specific customizations (if on Ubuntu)
-
-    In dry-run mode, all files are copied to .target/ directory
-    for review before actual installation.
-
-Examples:
-    # Normal installation
-    ./install.sh
-
-    # Preview changes without applying
-    ./install.sh --dry-run
-
-    # Verbose output for troubleshooting
-    ./install.sh --verbose
+    On first run, it creates a configuration file that you must edit
+    with your personal information before proceeding with installation.
 
 For more information, see README.md
 EOF
 }
 
-#
-# Function: parse_arguments
-# Description: Parse command line arguments
-# Args: All script arguments ($@)
-# Usage: parse_arguments "$@"
-# Output (stdout): None
-# Return code: 0 on success, exits on invalid arguments
-#
-parse_arguments() {
+check_prerequisites() {
+    local missing_tools=()
+
+    # Check for whiptail
+    if ! command_exists whiptail; then
+        missing_tools+=("whiptail")
+    fi
+
+    # Check bash version
+    if [[ "${BASH_VERSINFO[0]}" -lt 4 ]]; then
+        log_error "Bash 4.0+ required. Current: $BASH_VERSION"
+        exit 1
+    fi
+
+    # Check if running on Linux
+    if [[ "$(uname -s)" != "Linux" ]]; then
+        log_error "This script is designed for Linux systems"
+        exit 1
+    fi
+
+    if [[ ${#missing_tools[@]} -gt 0 ]]; then
+        log_error "Missing required tools: ${missing_tools[*]}"
+        log_info "Install with: sudo nala install ${missing_tools[*]}"
+        exit 1
+    fi
+}
+
+config_exists() {
+    [[ -f "$CONFIG_FILE" ]]
+}
+
+check_sudo_required() {
+    local selections="$1"
+
+    # Remove quotes from selections
+    selections=$(echo "$selections" | tr -d '"')
+
+    # Check if any of the selected steps require sudo
+    for item in $selections; do
+        case "$item" in
+            packages|snap|directory|bash_scripts)
+                return 0  # Requires sudo
+                ;;
+        esac
+    done
+
+    return 1  # No sudo required
+}
+
+prompt_sudo_early() {
+    log_info "Some installation steps require administrative privileges."
+    log_info "You will be prompted for your password..."
+    echo ""
+
+    # Warm up sudo credentials
+    if sudo -v; then
+        log_success "Sudo credentials cached successfully"
+        echo ""
+        return 0
+    else
+        log_error "Failed to obtain sudo privileges"
+        return 1
+    fi
+}
+
+create_config_from_example() {
+    log_info "Creating configuration directory: $CONFIG_DIR"
+    mkdir -p "$CONFIG_DIR"
+    chmod 700 "$CONFIG_DIR"
+
+    log_info "Copying configuration template to: $CONFIG_FILE"
+    cp "$CONFIG_EXAMPLE" "$CONFIG_FILE"
+    chmod 600 "$CONFIG_FILE"
+
+    log_success "Configuration file created at: $CONFIG_FILE"
+}
+
+update_last_run_timestamp() {
+    local timestamp
+    timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+
+    # Update LAST_TIME_RUN in config file
+    if grep -q "CONFIG\[LAST_TIME_RUN\]" "$CONFIG_FILE"; then
+        sed -i "s/CONFIG\[LAST_TIME_RUN\]=.*/CONFIG[LAST_TIME_RUN]=\"$timestamp\"/" "$CONFIG_FILE"
+    else
+        echo "CONFIG[LAST_TIME_RUN]=\"$timestamp\"" >> "$CONFIG_FILE"
+    fi
+}
+
+get_last_run_info() {
+    if [[ -f "$CONFIG_FILE" ]]; then
+        # Declare CONFIG as associative array before sourcing
+        declare -A CONFIG
+
+        # Source the config file to read values
+        # shellcheck disable=SC1090
+        source "$CONFIG_FILE" 2>/dev/null || true
+
+        local last_run="${CONFIG[LAST_TIME_RUN]:-Never}"
+        local username="${CONFIG[USERNAME]:-<not set>}"
+        local email="${CONFIG[EMAIL]:-<not set>}"
+        local company="${CONFIG[COMPANY]:-<not set>}"
+
+        echo "Last installation run: $last_run
+
+Configuration summary:
+  Username: $username
+  Email: $email
+  Company: $company
+
+Config file: $CONFIG_FILE
+
+Note: Secrets (tokens, PATs) are not displayed for security.
+To view or edit your configuration, open:
+  $CONFIG_FILE"
+    fi
+}
+
+show_installation_menu() {
+    # Use file descriptor 3 to capture output while allowing UI to display
+    local selections
+
+    set +e  # Temporarily disable exit on error
+    selections=$(whiptail --title "MyLiCuLa - Select Installation Steps" \
+        --checklist "\nSelect which components to install:\n(Use SPACE to select/deselect, ARROW keys to navigate, ENTER to confirm)" \
+        24 78 14 \
+        "packages" "Install packages & applications" ON \
+        "snap" "Install snap applications" ON \
+        "directory" "Create directory structure" ON \
+        "bash_scripts" "Install bash scripts" ON \
+        "keyboard" "Create keyboard shortcuts" ON \
+        "gitlab" "Clone GitLab repositories" OFF \
+        "github" "Clone GitHub repositories" OFF \
+        "icons" "Customize UI: Install icons" ON \
+        "templates" "Customize UI: Install templates" ON \
+        "set_title" "Others: Install set-title function" ON \
+        "maven" "Others: Create Maven global configuration" OFF \
+        "flyway" "3rd party apps: Flyway" OFF \
+        "toolbox" "3rd party apps: Toolbox" OFF \
+        3>&1 1>&2 2>&3)
+
+    local whiptail_exit=$?
+    set -e  # Re-enable exit on error
+
+    if [[ $whiptail_exit -eq 0 ]]; then
+        # Return the selections (space-separated list of tags)
+        echo "$selections"
+        return 0
+    else
+        return 1
+    fi
+}
+
+execute_installation_step() {
+    local step_name="$1"
+    local script_path="$2"
+    local needs_sudo="${3:-false}"
+
+    log_info "Executing: $step_name"
+
+    if [[ ! -f "$script_path" ]]; then
+        log_error "Script not found: $script_path"
+        return 1
+    fi
+
+    # Execute with or without sudo based on needs
+    if [[ "$needs_sudo" == "true" ]]; then
+        if sudo bash "$script_path"; then
+            log_success "Completed: $step_name"
+            return 0
+        else
+            log_error "Failed: $step_name"
+            return 1
+        fi
+    else
+        if bash "$script_path"; then
+            log_success "Completed: $step_name"
+            return 0
+        else
+            log_error "Failed: $step_name"
+            return 1
+        fi
+    fi
+}
+
+run_selected_installations() {
+    local selections="$1"
+
+    # Remove quotes from selections
+    selections=$(echo "$selections" | tr -d '"')
+
+    local total_steps=0
+    local completed_steps=0
+    local failed_steps=0
+
+    # Count total steps
+    for item in $selections; do
+        total_steps=$((total_steps + 1))
+    done
+
+    log_info "Starting installation of $total_steps selected component(s)"
+    echo ""
+
+    # Execute each selected step
+    for item in $selections; do
+        case "$item" in
+            packages)
+                if execute_installation_step "Install packages & applications" \
+                    "${SCRIPT_DIR}/setup/install_packages.sh" "true"; then
+                    completed_steps=$((completed_steps + 1))
+                else
+                    failed_steps=$((failed_steps + 1))
+                fi
+                ;;
+            snap)
+                if execute_installation_step "Install snap applications" \
+                    "${SCRIPT_DIR}/setup/install_snap.sh" "true"; then
+                    completed_steps=$((completed_steps + 1))
+                else
+                    failed_steps=$((failed_steps + 1))
+                fi
+                ;;
+            directory)
+                if execute_installation_step "Create directory structure" \
+                    "${SCRIPT_DIR}/setup/create_directory_structure.sh" "true"; then
+                    completed_steps=$((completed_steps + 1))
+                else
+                    failed_steps=$((failed_steps + 1))
+                fi
+                ;;
+            bash_scripts)
+                if execute_installation_step "Install bash scripts" \
+                    "${SCRIPT_DIR}/setup/install_bash_scripts.sh" "true"; then
+                    completed_steps=$((completed_steps + 1))
+                else
+                    failed_steps=$((failed_steps + 1))
+                fi
+                ;;
+            keyboard)
+                if execute_installation_step "Create keyboard shortcuts" \
+                    "${SCRIPT_DIR}/setup/create_keyboard_shortcuts.sh"; then
+                    completed_steps=$((completed_steps + 1))
+                else
+                    failed_steps=$((failed_steps + 1))
+                fi
+                ;;
+            gitlab)
+                if execute_installation_step "Clone GitLab repositories" \
+                    "${SCRIPT_DIR}/setup/clone_gitlab_repositories.sh"; then
+                    completed_steps=$((completed_steps + 1))
+                else
+                    failed_steps=$((failed_steps + 1))
+                fi
+                ;;
+            github)
+                if execute_installation_step "Clone GitHub repositories" \
+                    "${SCRIPT_DIR}/setup/clone_github_repositories.sh"; then
+                    completed_steps=$((completed_steps + 1))
+                else
+                    failed_steps=$((failed_steps + 1))
+                fi
+                ;;
+            icons)
+                if execute_installation_step "Customize UI: Install icons" \
+                    "${SCRIPT_DIR}/setup/install_icons.sh"; then
+                    completed_steps=$((completed_steps + 1))
+                else
+                    failed_steps=$((failed_steps + 1))
+                fi
+                ;;
+            templates)
+                if execute_installation_step "Customize UI: Install templates" \
+                    "${SCRIPT_DIR}/setup/install_templates.sh"; then
+                    completed_steps=$((completed_steps + 1))
+                else
+                    failed_steps=$((failed_steps + 1))
+                fi
+                ;;
+            set_title)
+                if execute_installation_step "Others: Install set-title function" \
+                    "${SCRIPT_DIR}/setup/install_set-title_function.sh"; then
+                    completed_steps=$((completed_steps + 1))
+                else
+                    failed_steps=$((failed_steps + 1))
+                fi
+                ;;
+            maven)
+                if execute_installation_step "Others: Create Maven global configuration" \
+                    "${SCRIPT_DIR}/setup/create_maven_global_configuration.sh"; then
+                    completed_steps=$((completed_steps + 1))
+                else
+                    failed_steps=$((failed_steps + 1))
+                fi
+                ;;
+            flyway)
+                if execute_installation_step "3rd party apps: Flyway" \
+                    "${SCRIPT_DIR}/setup/apps/install_flyway.sh"; then
+                    completed_steps=$((completed_steps + 1))
+                else
+                    failed_steps=$((failed_steps + 1))
+                fi
+                ;;
+            toolbox)
+                if execute_installation_step "3rd party apps: Toolbox" \
+                    "${SCRIPT_DIR}/setup/apps/install_toolbox.sh"; then
+                    completed_steps=$((completed_steps + 1))
+                else
+                    failed_steps=$((failed_steps + 1))
+                fi
+                ;;
+            *)
+                log_warning "Unknown installation step: $item"
+                ;;
+        esac
+        echo ""
+    done
+
+    # Show summary
+    echo ""
+    echo "=========================================="
+    log_info "Installation Summary"
+    echo "=========================================="
+    log_info "Total steps: $total_steps"
+    log_success "Completed: $completed_steps"
+    if [[ $failed_steps -gt 0 ]]; then
+        log_error "Failed: $failed_steps"
+    fi
+    echo ""
+}
+
+#==================================================================================================
+# Main Installation Flow
+#==================================================================================================
+
+main() {
+    # Parse arguments
     while [[ $# -gt 0 ]]; do
         case $1 in
-            --dry-run)
-                export DRY_RUN=true
-                log_info "Dry-run mode enabled"
-                shift
-                ;;
-            --verbose)
-                export VERBOSE=true
-                log_info "Verbose mode enabled"
-                shift
-                ;;
-            --help|-h)
+            -h|--help)
                 show_help
                 exit 0
                 ;;
@@ -125,443 +453,81 @@ parse_arguments() {
                 ;;
         esac
     done
-}
 
-#
-# Function: check_requirements
-# Description: Check system requirements before installation
-# Args: None
-# Usage: check_requirements
-# Output (stdout): Requirement check results
-# Return code: 0 on success, exits on failure
-#
-check_requirements() {
-    log_info "Checking system requirements..."
+    # Check prerequisites
+    check_prerequisites
 
-    # Check bash version
-    if [[ "${BASH_VERSINFO[0]}" -lt 4 ]]; then
-        die "Bash 4.0 or higher required. Current: $BASH_VERSION"
-    fi
-    log_success "Bash version: $BASH_VERSION"
+    # Show banner
+    show_banner
 
-    # Check if running on Linux
-    if [[ "$(uname -s)" != "Linux" ]]; then
-        die "This script is designed for Linux systems"
-    fi
-    log_success "Running on Linux"
+    # Check if configuration exists
+    if config_exists; then
+        # Configuration exists - show info and ask to continue
+        local config_info
+        config_info=$(get_last_run_info)
 
-    # Check if Ubuntu (optional - some scripts may not run if not Ubuntu)
-    if is_ubuntu; then
-        local version
-        version=$(get_ubuntu_version)
-        log_success "Detected Ubuntu $version"
-        CONFIG[UBUNTU_VERSION]="$version"
-        CONFIG[IS_UBUNTU]="true"
+        if whiptail --title "MyLiCuLa - Configuration Found" \
+            --yesno "$config_info\n\nDo you want to continue with this configuration?" \
+            20 78; then
+
+            # User wants to continue - show installation menu
+            local selections
+            if selections=$(show_installation_menu); then
+                # Check if sudo is needed and prompt early
+                if check_sudo_required "$selections"; then
+                    if ! prompt_sudo_early; then
+                        log_error "Cannot proceed without sudo privileges"
+                        exit 1
+                    fi
+                fi
+
+                # User selected components - update timestamp and start installation
+                update_last_run_timestamp
+
+                # Execute selected installations
+                run_selected_installations "$selections"
+
+                # Show completion message
+                whiptail --title "MyLiCuLa - Installation Complete" \
+                    --msgbox "Installation completed!\n\nPlease review the output above for any errors.\n\nYou may need to log out and log back in for all changes to take effect." \
+                    12 70
+
+                log_success "Installation completed"
+            else
+                # User cancelled the selection menu
+                whiptail --title "MyLiCuLa - Cancelled" \
+                    --msgbox "Installation cancelled by user." \
+                    8 50
+                log_info "Installation cancelled by user"
+                exit 0
+            fi
+        else
+            # User cancelled configuration confirmation
+            whiptail --title "MyLiCuLa - Cancelled" \
+                --msgbox "Installation cancelled by user.\n\nTo reconfigure, edit:\n  $CONFIG_FILE\n\nOr delete it and run this script again." \
+                12 70
+            log_info "Installation cancelled by user"
+            exit 0
+        fi
     else
-        log_warning "Not running on Ubuntu - Ubuntu-specific customizations will be skipped"
-        CONFIG[UBUNTU_VERSION]=""
-        CONFIG[IS_UBUNTU]="false"
-    fi
+        # Configuration doesn't exist - create from example
+        whiptail --title "MyLiCuLa - First Run" \
+            --msgbox "Welcome to MyLiCuLa!\n\nNo configuration file found. A template will be created for you.\n\nYou will need to edit it with your personal information before running the installer again." \
+            12 70
 
-    # Check for required commands
-    local required_commands=("git" "bash")
-    for cmd in "${required_commands[@]}"; do
-        if ! command_exists "$cmd"; then
-            die "Required command not found: $cmd"
-        fi
-    done
-    log_success "Required commands found"
-}
+        # Create config from example
+        create_config_from_example
 
-#
-# Function: load_saved_config
-# Description: Load previously saved configuration if it exists
-# Args: None
-# Usage: load_saved_config
-# Output (stdout): None
-# Return code: 0
-#
-load_saved_config() {
-    if [[ -f "$CONFIG_FILE" ]]; then
-        log_info "Loading saved configuration from $CONFIG_FILE"
-        # shellcheck disable=SC1090
-        source "$CONFIG_FILE"
-        return 0
-    fi
-    return 1
-}
+        # Show instructions
+        whiptail --title "MyLiCuLa - Configuration Required" \
+            --msgbox "Configuration file created at:\n  $CONFIG_FILE\n\nPlease edit this file and update the following:\n\n  1. Your username, email, and full name\n  2. Your company/organization\n  3. Your GitHub username (optional)\n  4. GitLab credentials (optional)\n  5. GitHub PAT token (optional)\n\nAfter editing the configuration file, run this script again to start the installation.\n\nTo edit now:\n  nano $CONFIG_FILE\n  or\n  gedit $CONFIG_FILE" \
+            20 78
 
-#
-# Function: save_config
-# Description: Save configuration to file for future use
-# Args: None
-# Usage: save_config
-# Output (stdout): None
-# Return code: 0
-#
-save_config() {
-    # Create config directory if it doesn't exist
-    if [[ ! -d "$CONFIG_DIR" ]]; then
-        log_info "Creating configuration directory: $CONFIG_DIR"
-        mkdir -p "$CONFIG_DIR"
-        chmod 700 "$CONFIG_DIR"  # Make it private to user
-    fi
-
-    log_info "Saving configuration to $CONFIG_FILE"
-
-    cat > "$CONFIG_FILE" << EOF
-# MyLiCuLa Configuration File
-# Generated on $(date)
-#
-# Location: ~/.config/mylicula/mylicula.conf
-#
-# IMPORTANT: This file may contain secrets (GitHub tokens, API keys, etc.)
-#            DO NOT commit this file to version control!
-#            DO NOT share this file with others!
-#
-# To reconfigure: Delete this file and run ./install.sh again
-# To edit manually: Edit this file directly with your text editor
-
-# =============================================================================
-# User Information
-# =============================================================================
-
-CONFIG[USERNAME]="${CONFIG[USERNAME]}"
-CONFIG[EMAIL]="${CONFIG[EMAIL]}"
-CONFIG[FULL_NAME]="${CONFIG[FULL_NAME]}"
-CONFIG[COMPANY]="${CONFIG[COMPANY]}"
-
-# =============================================================================
-# System Paths (auto-detected)
-# =============================================================================
-
-CONFIG[HOME]="${CONFIG[HOME]}"
-CONFIG[SCRIPT_DIR]="${CONFIG[SCRIPT_DIR]}"
-CONFIG[BASE_DIR]="${MYLICULA_BASE_DIR}"
-
-# =============================================================================
-# System Information (auto-detected)
-# =============================================================================
-
-CONFIG[UBUNTU_VERSION]="${CONFIG[UBUNTU_VERSION]}"
-CONFIG[IS_UBUNTU]="${CONFIG[IS_UBUNTU]}"
-
-# =============================================================================
-# Git Repository Credentials
-# =============================================================================
-# IMPORTANT: These credentials are used by scripts to clone repositories
-#            from GitLab and GitHub. Keep this file secure (mode 600).
-#            You can edit these values manually at any time.
-
-# GitLab Configuration
-# Generate PAT at: https://gitlab.com/-/profile/personal_access_tokens
-# Required scope: read_repository
-CONFIG[GITLAB_USER]="${CONFIG[GITLAB_USER]}"
-CONFIG[GITLAB_PAT]="${CONFIG[GITLAB_PAT]}"
-
-# GitHub Configuration
-# Generate PAT at: https://github.com/settings/tokens
-# Required scope: repo (for private repos) or public_repo (for public only)
-CONFIG[GITHUB_USER]="${CONFIG[GITHUB_USER]}"
-CONFIG[GITHUB_PAT]="${CONFIG[GITHUB_PAT]}"
-
-# =============================================================================
-# Other Secrets (Future Use)
-# =============================================================================
-# Add additional API keys or secrets below as needed
-# CONFIG[SOME_API_KEY]="your_api_key_here"
-
-EOF
-
-    chmod 600 "$CONFIG_FILE"  # Make it readable only by owner
-    log_success "Configuration saved (mode 600 - owner read/write only)"
-}
-
-#
-# Function: collect_configuration
-# Description: Interactively collect configuration from user
-# Args: None
-# Usage: collect_configuration
-# Output (stdout): Prompts and collected values
-# Return code: 0
-#
-collect_configuration() {
-    echo ""
-    log_info "=== Configuration Setup ==="
-    echo ""
-
-    # Try to load saved config
-    local use_saved=false
-    if load_saved_config && [[ -n "${CONFIG[USERNAME]:-}" ]]; then
-        echo "Found saved configuration:"
-        echo "  Username:    ${CONFIG[USERNAME]}"
-        echo "  Email:       ${CONFIG[EMAIL]}"
-        echo "  Company:     ${CONFIG[COMPANY]}"
-        echo "  GitLab User: ${CONFIG[GITLAB_USER]:-<not set>}"
-        echo "  GitLab PAT:  ${CONFIG[GITLAB_PAT]:+<set>}${CONFIG[GITLAB_PAT]:-<not set>}"
-        echo "  GitHub User: ${CONFIG[GITHUB_USER]:-<not set>}"
-        echo "  GitHub PAT:  ${CONFIG[GITHUB_PAT]:+<set>}${CONFIG[GITHUB_PAT]:-<not set>}"
-        echo ""
-        if prompt_yes_no "Use saved configuration?" "y"; then
-            use_saved=true
-        fi
-    fi
-
-    if [[ "$use_saved" == "false" ]]; then
-        # Collect user information
-        echo ""
-        log_info "Please provide your information for customization:"
-        echo ""
-
-        # Username (default to current user)
-        CONFIG[USERNAME]=$(prompt_with_default "Username" "${USER}")
-
-        # Email (try to get from git config)
-        local default_email=""
-        if command_exists git; then
-            default_email=$(git config --global user.email 2>/dev/null || echo "")
-        fi
-        CONFIG[EMAIL]=$(prompt_with_default "Email address" "${default_email:-user@example.com}")
-
-        # Full name (try to get from git config)
-        local default_name=""
-        if command_exists git; then
-            default_name=$(git config --global user.name 2>/dev/null || echo "")
-        fi
-        CONFIG[FULL_NAME]=$(prompt_with_default "Full name" "${default_name:-$USER}")
-
-        # Company/Organization
-        CONFIG[COMPANY]=$(prompt_with_default "Company/Organization" "Personal")
-
-        echo ""
-        log_info "Git Repository Credentials (optional - can be configured later):"
-        echo ""
-        echo "These credentials are used by scripts to clone repositories from GitHub/GitLab."
-        echo "You can leave them empty now and configure them later by editing:"
-        echo "  ~/.config/mylicula/mylicula.conf"
-        echo ""
-
-        # GitLab username (optional)
-        CONFIG[GITLAB_USER]=$(prompt_with_default "GitLab username (optional)" "")
-
-        # GitLab PAT (optional)
-        echo ""
-        echo "GitLab Personal Access Token (PAT):"
-        echo "  Generate at: https://gitlab.com/-/profile/personal_access_tokens"
-        echo "  Required scope: read_repository"
-        CONFIG[GITLAB_PAT]=$(prompt_with_default "GitLab PAT (optional)" "")
-
-        # GitHub username (optional)
-        CONFIG[GITHUB_USER]=$(prompt_with_default "GitHub username (optional)" "${CONFIG[USERNAME]}")
-
-        # GitHub PAT (optional)
-        echo ""
-        echo "GitHub Personal Access Token (PAT):"
-        echo "  Generate at: https://github.com/settings/tokens"
-        echo "  Required scope: repo (for private repos) or public_repo (for public only)"
-        CONFIG[GITHUB_PAT]=$(prompt_with_default "GitHub PAT (optional)" "")
-
-        # Add derived configuration BEFORE saving
-        CONFIG[HOME]="${HOME}"
-        CONFIG[SCRIPT_DIR]="${SCRIPT_DIR}"
-        CONFIG[BASE_DIR]="${MYLICULA_BASE_DIR}"
-
-        # Save configuration for future use
-        save_config
-    fi
-
-    # Ensure derived configuration is set even when loading saved config
-    CONFIG[HOME]="${HOME}"
-    CONFIG[SCRIPT_DIR]="${SCRIPT_DIR}"
-    CONFIG[BASE_DIR]="${MYLICULA_BASE_DIR}"
-
-    # Display collected configuration
-    echo ""
-    log_success "Configuration collected:"
-    echo "  Username:    ${CONFIG[USERNAME]}"
-    echo "  Email:       ${CONFIG[EMAIL]}"
-    echo "  Full Name:   ${CONFIG[FULL_NAME]}"
-    echo "  Company:     ${CONFIG[COMPANY]}"
-    echo "  GitLab User: ${CONFIG[GITLAB_USER]:-<not set>}"
-    echo "  GitLab PAT:  ${CONFIG[GITLAB_PAT]:+<set>}${CONFIG[GITLAB_PAT]:-<not set>}"
-    echo "  GitHub User: ${CONFIG[GITHUB_USER]:-<not set>}"
-    echo "  GitHub PAT:  ${CONFIG[GITHUB_PAT]:+<set>}${CONFIG[GITHUB_PAT]:-<not set>}"
-    echo "  Home:        ${CONFIG[HOME]}"
-    echo ""
-
-    # Export for use by child scripts
-    export MYLICULA_USERNAME="${CONFIG[USERNAME]}"
-    export MYLICULA_EMAIL="${CONFIG[EMAIL]}"
-    export MYLICULA_FULL_NAME="${CONFIG[FULL_NAME]}"
-    export MYLICULA_COMPANY="${CONFIG[COMPANY]}"
-    export MYLICULA_GITLAB_USER="${CONFIG[GITLAB_USER]}"
-    export MYLICULA_GITLAB_PAT="${CONFIG[GITLAB_PAT]}"
-    export MYLICULA_GITHUB_USER="${CONFIG[GITHUB_USER]}"
-    export MYLICULA_GITHUB_PAT="${CONFIG[GITHUB_PAT]}"
-}
-
-#
-# Function: setup_dry_run
-# Description: Setup .target directory for dry-run mode
-# Args: None
-# Usage: setup_dry_run
-# Output (stdout): Setup messages
-# Return code: 0
-#
-setup_dry_run() {
-    if [[ "${DRY_RUN}" == "true" ]]; then
-        local target_dir="${SCRIPT_DIR}/.target"
-
-        log_info "Setting up dry-run environment in $target_dir"
-
-        # Remove old .target if exists
-        if [[ -d "$target_dir" ]]; then
-            rm -rf "$target_dir"
-        fi
-
-        # Create .target directory structure
-        mkdir -p "$target_dir/home/${CONFIG[USERNAME]}"
-        mkdir -p "$target_dir/etc"
-        mkdir -p "$target_dir/usr/local"
-
-        log_success "Dry-run environment ready at $target_dir"
-        log_warning "No actual changes will be made to your system"
-
-        export TARGET_DIR="$target_dir"
-    fi
-}
-
-#
-# Function: run_linux_setup
-# Description: Run generic Linux customizations
-# Args: None
-# Usage: run_linux_setup
-# Output (stdout): Setup progress
-# Return code: 0 on success
-#
-run_linux_setup() {
-    local setup_script="${SCRIPT_DIR}/customize/linux_setup.sh"
-
-    if [[ ! -f "$setup_script" ]]; then
-        log_warning "Linux setup script not found: $setup_script"
-        log_warning "Skipping generic Linux customizations"
-        return 0
-    fi
-
-    log_info "Running generic Linux customizations..."
-    bash "$setup_script"
-    log_success "Linux customizations completed"
-}
-
-#
-# Function: run_ubuntu_setup
-# Description: Run Ubuntu-specific customizations
-# Args: None
-# Usage: run_ubuntu_setup
-# Output (stdout): Setup progress
-# Return code: 0 on success
-#
-run_ubuntu_setup() {
-    # Skip if not Ubuntu
-    if [[ "${CONFIG[IS_UBUNTU]}" != "true" ]]; then
-        log_info "Not running Ubuntu - skipping Ubuntu-specific customizations"
-        return 0
-    fi
-
-    local setup_script="${SCRIPT_DIR}/customize/ubuntu_setup.sh"
-
-    if [[ ! -f "$setup_script" ]]; then
-        log_warning "Ubuntu setup script not found: $setup_script"
-        log_warning "Skipping Ubuntu-specific customizations"
-        return 0
-    fi
-
-    log_info "Running Ubuntu-specific customizations..."
-    bash "$setup_script"
-    log_success "Ubuntu customizations completed"
-}
-
-#
-# Function: show_completion_message
-# Description: Show completion message with next steps
-# Args: None
-# Usage: show_completion_message
-# Output (stdout): Completion message
-# Return code: 0
-#
-show_completion_message() {
-    echo ""
-    echo "=========================================="
-    log_success "MyLiCuLa Installation Complete!"
-    echo "=========================================="
-    echo ""
-
-    if [[ "${DRY_RUN}" == "true" ]]; then
-        log_info "Dry-run results available in: ${SCRIPT_DIR}/.target"
-        echo ""
-        echo "To review changes:"
-        echo "  cd ${SCRIPT_DIR}/.target"
-        echo "  find . -type f"
-        echo ""
-        echo "To apply changes, run without --dry-run:"
-        echo "  ./install.sh"
-    else
-        echo "Next steps:"
-        echo "  1. Log out and log back in for all changes to take effect"
-        echo "  2. Or reload your shell configuration:"
-        echo "     source ~/.bashrc"
-        echo ""
-        echo "Configuration saved to: $CONFIG_FILE"
-    fi
-    echo ""
-}
-
-#–––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
-# Main installation flow
-#–––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
-
-main() {
-    # Print banner
-    echo ""
-    echo "=========================================="
-    echo "  MyLiCuLa - My Linux Custom Layer"
-    echo "  Linux Customization Installer"
-    echo "=========================================="
-    echo ""
-
-    # Parse command line arguments
-    parse_arguments "$@"
-
-    # Check system requirements
-    check_requirements
-
-    # Collect configuration from user
-    collect_configuration
-
-    # Setup dry-run environment if requested
-    setup_dry_run
-
-    # Confirm before proceeding
-    echo ""
-    if ! prompt_yes_no "Proceed with installation?" "y"; then
-        log_info "Installation cancelled by user"
+        log_info "Configuration file created. Please edit it and run this script again."
+        log_info "Edit with: nano $CONFIG_FILE"
         exit 0
     fi
-    echo ""
-
-    # Run customization scripts
-    log_info "=== Starting customization process ==="
-    echo ""
-
-    run_linux_setup
-    echo ""
-
-    run_ubuntu_setup
-    echo ""
-
-    # Show completion message
-    show_completion_message
 }
 
-# Run main function with all arguments
+# Run main function
 main "$@"
