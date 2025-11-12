@@ -1,0 +1,9 @@
+nala
+zip
+unzip
+tar
+sed
+grep
+curl
+jq
+yad

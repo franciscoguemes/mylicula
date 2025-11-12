@@ -16,6 +16,27 @@ The entire idea is to automate the concepts from [General Conventions](/home/fra
 
 ## Quick Start
 
+### One-Line Installation (Recommended)
+
+```bash
+# Download and run installer directly from GitHub
+curl -fsSL https://raw.githubusercontent.com/franciscoguemes/mylicula/main/bootstrap.sh | bash
+```
+
+**For security-conscious users** (review before running):
+```bash
+# Download the bootstrap script
+curl -fsSL https://raw.githubusercontent.com/franciscoguemes/mylicula/main/bootstrap.sh -o bootstrap.sh
+
+# Review the script
+less bootstrap.sh
+
+# Run the installer
+bash bootstrap.sh
+```
+
+### Manual Installation (Clone Repository)
+
 ```bash
 # Clone the repository
 git clone https://github.com/franciscoguemes/mylicula.git
@@ -29,6 +50,18 @@ cd mylicula
 
 # Or run with verbose output
 ./install.sh --verbose
+```
+
+### Installation Options
+
+Environment variables for bootstrap installer:
+- `MYLICULA_DIR` - Installation directory (default: `$HOME/mylicula`)
+- `MYLICULA_BRANCH` - Git branch to use (default: `main`)
+- `MYLICULA_KEEP_REPO` - Keep repository after install (default: `true`)
+
+Example with custom directory:
+```bash
+curl -fsSL https://raw.githubusercontent.com/franciscoguemes/mylicula/main/bootstrap.sh | MYLICULA_DIR=~/custom/path bash
 ```
 
 On first run, the installer will ask for your information (name, email, company) and save it to `~/.config/mylicula/mylicula.conf` for future runs.
