@@ -70,24 +70,39 @@ On first run, the installer will ask for your information (name, email, company)
 
 ```bash
 mylicula/
-├── customize/              # Production-ready customization scripts
-│   ├── linux/             # Generic Linux customizations
-│   │   └── *.sh           # Individual customization scripts
-│   ├── ubuntu/            # Ubuntu-specific customizations
-│   │   ├── *.sh           # Main customization scripts
-│   │   └── resources/     # Icons, templates, config files, package lists
-│   │       ├── apt/       # APT package lists
-│   │       │   ├── standard_packages.txt  # Default repo packages
-│   │       │   └── custom_packages.txt    # Custom repos with metadata
-│   │       ├── snap/      # Snap package lists
-│   │       │   └── list_of_snap.txt       # Snap packages with FLAGS
-│   │       ├── images/    # Icons and images
-│   │       └── templates/ # File templates
-│   ├── linux_setup.sh     # Orchestrates generic Linux customizations
-│   └── ubuntu_setup.sh    # Orchestrates Ubuntu-specific customizations
-├── in_review/             # Scripts under development/testing
-│   ├── linux/             # Linux scripts in review
-│   └── ubuntu/            # Ubuntu scripts in review
+├── setup/                  # Installation and configuration scripts
+│   ├── apps/              # Application installation scripts
+│   │   ├── install_flyway.sh
+│   │   └── install_toolbox.sh
+│   ├── clone_github_repositories.sh
+│   ├── clone_gitlab_repositories.sh
+│   ├── create_directory_structure.sh
+│   ├── create_keyboard_shortcuts.sh
+│   ├── create_maven_global_configuration.sh
+│   ├── install_bash_scripts.sh
+│   ├── install_icons.sh
+│   ├── install_packages.sh
+│   ├── install_set-title_function.sh
+│   ├── install_snap.sh
+│   └── install_templates.sh
+├── uninstall/              # Uninstallation and cleanup scripts
+│   ├── remove_keyboard_shortcuts.sh
+│   └── uninstall_bash_scripts.sh
+├── resources/              # Configuration files, templates, and data
+│   ├── apt/               # Package lists
+│   │   ├── standard_packages.txt  # Default repo packages
+│   │   └── custom_packages.txt    # Custom repos with metadata
+│   ├── config/            # Configuration templates
+│   │   └── mylicula.conf.example  # Configuration blueprint
+│   ├── icons/             # Custom icons
+│   ├── snap/              # Snap package lists
+│   │   └── list_of_snap.txt       # Snap packages with FLAGS
+│   └── templates/         # File templates
+├── scripts/                # Helper and utility scripts
+│   └── bash/              # Bash helper scripts
+│       ├── github/        # GitHub repository management
+│       └── gitlab/        # GitLab repository management
+├── in_review/              # Scripts under review (staging area)
 ├── lib/                   # Shared utility libraries
 │   ├── common.sh          # Common functions (logging, prompts, symlinks)
 │   └── installer_common.sh # Shared installer functions (logging, args, validation)
@@ -96,21 +111,37 @@ mylicula/
 │   ├── install_bats.sh    # BATS installation script
 │   ├── run_tests.sh       # Test runner
 │   └── README.md          # Testing documentation
+├── bootstrap.sh           # One-line installer (downloadable from GitHub)
 ├── install.sh             # Main interactive installation script
-├── mylicula.conf.example  # Configuration blueprint with example values
 ├── README.md              # This file
 ├── Testing.md             # Testing guidelines
-└── TODO.md                # Pending tasks and future enhancements
+├── TODO.md                # Pending tasks and future enhancements
+└── LICENSE                # Project license
 ```
 
 ### Key Directories
 
-**`customize/`** - Production-ready scripts that are executed during installation
-- `linux/` - Generic customizations that work on any Linux distribution
-- `ubuntu/` - Ubuntu-specific customizations (UI, PPA repos, etc.)
+**`setup/`** - Installation scripts executed during setup
+- Contains all installation and configuration scripts
+- Organized by functionality (apps, package installation, customizations)
+
+**`uninstall/`** - Cleanup and removal scripts
+- Scripts to uninstall customizations
+- Safely removes installed components
+
+**`resources/`** - Configuration files, templates, and data
+- `apt/` - Package lists for apt installation
+- `config/` - Configuration templates and examples
+- `icons/` - Custom directory icons
+- `snap/` - Snap package lists
+- `templates/` - File templates for Nautilus
+
+**`scripts/`** - Helper scripts and utilities
+- Reusable bash scripts for specific tasks
+- GitHub and GitLab repository management tools
 
 **`in_review/`** - Staging area for scripts under development
-- Scripts are tested here before promotion to `customize/`
+- Scripts are tested here before promotion to `setup/`
 - Not executed during normal installation
 
 **`lib/`** - Shared utility functions
@@ -142,7 +173,7 @@ This file contains:
 
 ### Configuration Blueprint
 
-The repository includes `mylicula.conf.example` as a blueprint:
+The repository includes `resources/config/mylicula.conf.example` as a blueprint:
 - Shows all available configuration options
 - Contains example values
 - Safe to commit (no real secrets)
@@ -539,7 +570,7 @@ rm ~/.config/mylicula/mylicula.conf
 
 **Problem:** Config file corrupted
 ```bash
-cp mylicula.conf.example ~/.config/mylicula/mylicula.conf
+cp resources/config/mylicula.conf.example ~/.config/mylicula/mylicula.conf
 nano ~/.config/mylicula/mylicula.conf  # Edit with your values
 ```
 
