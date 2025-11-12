@@ -40,7 +40,7 @@ source "${SCRIPT_DIR}/lib/common.sh"
 declare -gA CONFIG
 CONFIG_DIR="${HOME}/.config/mylicula"
 CONFIG_FILE="${CONFIG_DIR}/mylicula.conf"
-CONFIG_EXAMPLE="${SCRIPT_DIR}/mylicula.conf.example"
+CONFIG_EXAMPLE="${SCRIPT_DIR}/resources/config/mylicula.conf.example"
 
 #–––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––––
 # Functions
