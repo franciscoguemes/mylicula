@@ -89,4 +89,7 @@ done
 
 #echo "${HOME}/Documents/Mega"
 #echo "${DESTINATION_DIR}/Mega-nz.png"
-gio set -t string "${HOME}/Documents/Mega" metadata::custom-icon "file://${DESTINATION_DIR}/Mega-nz.png"
+gio set -t string "${HOME}/Documents/Mega" metadata::custom-icon "file://${DESTINATION_DIR}/Mega-nz.png" 2>/dev/null || true
+
+# Exit successfully - script is idempotent (skipping existing icons is success)
+exit 0

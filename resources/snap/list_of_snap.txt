@@ -37,10 +37,3 @@ yq
 # Heroku CLI
 # FLAGS: --classic
 heroku
-
-#****************************************************************************************************
-# Android Tools
-#****************************************************************************************************
-# Application for display and control of Android devices connected by USB or TCP/IP
-scrcpy
-guiscrcpy
