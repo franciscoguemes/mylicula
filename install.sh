@@ -25,6 +25,12 @@ set -euo pipefail
 # Get the directory where this script is located
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 
+# Source common library for utility functions
+if [[ -f "${SCRIPT_DIR}/lib/common.sh" ]]; then
+    # shellcheck source=lib/common.sh
+    source "${SCRIPT_DIR}/lib/common.sh"
+fi
+
 # Configuration paths
 CONFIG_DIR="${HOME}/.config/mylicula"
 CONFIG_FILE="${CONFIG_DIR}/mylicula.conf"
@@ -35,31 +41,31 @@ BANNER_FILE="${SCRIPT_DIR}/resources/banner/banner.txt"
 export MYLICULA_BASE_DIR="$SCRIPT_DIR"
 
 # Colors for terminal output (when not using whiptail)
-readonly COLOR_RED='\033[0;31m'
-readonly COLOR_GREEN='\033[0;32m'
-readonly COLOR_YELLOW='\033[1;33m'
-readonly COLOR_BLUE='\033[0;34m'
-readonly COLOR_RESET='\033[0m'
+#readonly COLOR_RED='\033[0;31m'
+#readonly COLOR_GREEN='\033[0;32m'
+#readonly COLOR_YELLOW='\033[1;33m'
+#readonly COLOR_BLUE='\033[0;34m'
+#readonly COLOR_RESET='\033[0m'
 
 #==================================================================================================
 # Output Functions
 #==================================================================================================
 
-log_info() {
-    echo -e "${COLOR_BLUE}[INFO]${COLOR_RESET} $*" >&2
-}
-
-log_success() {
-    echo -e "${COLOR_GREEN}[SUCCESS]${COLOR_RESET} $*" >&2
-}
-
-log_warning() {
-    echo -e "${COLOR_YELLOW}[WARNING]${COLOR_RESET} $*" >&2
-}
-
-log_error() {
-    echo -e "${COLOR_RED}[ERROR]${COLOR_RESET} $*" >&2
-}
+#log_info() {
+#    echo -e "${COLOR_BLUE}[INFO]${COLOR_RESET} $*" >&2
+#}
+#
+#log_success() {
+#    echo -e "${COLOR_GREEN}[SUCCESS]${COLOR_RESET} $*" >&2
+#}
+#
+#log_warning() {
+#    echo -e "${COLOR_YELLOW}[WARNING]${COLOR_RESET} $*" >&2
+#}
+#
+#log_error() {
+#    echo -e "${COLOR_RED}[ERROR]${COLOR_RESET} $*" >&2
+#}
 
 #==================================================================================================
 # Utility Functions
@@ -143,7 +149,7 @@ check_sudo_required() {
     # Check if any of the selected steps require sudo
     for item in $selections; do
         case "$item" in
-            packages|snap|directory|bash_scripts)
+            packages|snap|directory|bash_scripts|keyboard)
                 return 0  # Requires sudo
                 ;;
         esac
@@ -168,6 +174,24 @@ prompt_sudo_early() {
     fi
 }
 
+# Helper function to detect Ubuntu version
+detect_ubuntu_version() {
+    if [[ -f /etc/os-release ]] && grep -q "^ID=ubuntu" /etc/os-release; then
+        grep "^VERSION_ID=" /etc/os-release | cut -d'"' -f2
+    else
+        echo ""
+    fi
+}
+
+# Helper function to check if running on Ubuntu
+detect_is_ubuntu() {
+    if [[ -f /etc/os-release ]] && grep -q "^ID=ubuntu" /etc/os-release; then
+        echo "true"
+    else
+        echo "false"
+    fi
+}
+
 create_config_from_example() {
     log_info "Creating configuration directory: $CONFIG_DIR"
     mkdir -p "$CONFIG_DIR"
@@ -177,7 +201,102 @@ create_config_from_example() {
     cp "$CONFIG_EXAMPLE" "$CONFIG_FILE"
     chmod 600 "$CONFIG_FILE"
 
+    # Auto-populate detected values
+    log_info "Auto-populating configuration with detected values..."
+    echo ""
+
+    # Detect values
+    local detected_username="${USER:-your_username}"
+    local detected_home="${HOME}"
+    local detected_base_dir="${SCRIPT_DIR}"
+    local detected_ubuntu_version
+    detected_ubuntu_version=$(detect_ubuntu_version)
+    local detected_is_ubuntu
+    detected_is_ubuntu=$(detect_is_ubuntu)
+
+    # Try to get email and name from git config
+    local detected_email
+    detected_email=$(git config --global user.email 2>/dev/null || echo "")
+    local detected_fullname
+    detected_fullname=$(git config --global user.name 2>/dev/null || echo "")
+
+    # Update USERNAME
+    if sed -i "s|^CONFIG\[USERNAME\]=.*|CONFIG[USERNAME]=\"${detected_username}\"|" "$CONFIG_FILE" 2>/dev/null; then
+        log_info "  ✓ USERNAME: ${detected_username}"
+    else
+        log_warning "  ✗ Failed to update USERNAME, please set manually"
+    fi
+
+    # Update EMAIL if detected from git
+    if [[ -n "$detected_email" ]]; then
+        if sed -i "s|^CONFIG\[EMAIL\]=.*|CONFIG[EMAIL]=\"${detected_email}\"|" "$CONFIG_FILE" 2>/dev/null; then
+            log_info "  ✓ EMAIL: ${detected_email} (from git config)"
+        else
+            log_warning "  ✗ Failed to update EMAIL"
+        fi
+    else
+        log_warning "  ⚠ EMAIL: Not detected (no git config found)"
+    fi
+
+    # Update FULL_NAME if detected from git
+    if [[ -n "$detected_fullname" ]]; then
+        if sed -i "s|^CONFIG\[FULL_NAME\]=.*|CONFIG[FULL_NAME]=\"${detected_fullname}\"|" "$CONFIG_FILE" 2>/dev/null; then
+            log_info "  ✓ FULL_NAME: ${detected_fullname} (from git config)"
+        else
+            log_warning "  ✗ Failed to update FULL_NAME"
+        fi
+    else
+        log_warning "  ⚠ FULL_NAME: Not detected (no git config found)"
+    fi
+
+    # Update HOME
+    if sed -i "s|^CONFIG\[HOME\]=.*|CONFIG[HOME]=\"${detected_home}\"|" "$CONFIG_FILE" 2>/dev/null; then
+        log_info "  ✓ HOME: ${detected_home}"
+    else
+        log_warning "  ✗ Failed to update HOME"
+    fi
+
+    # Update BASE_DIR (MyLiCuLa installation directory)
+    if sed -i "s|^CONFIG\[BASE_DIR\]=.*|CONFIG[BASE_DIR]=\"${detected_base_dir}\"|" "$CONFIG_FILE" 2>/dev/null; then
+        log_info "  ✓ BASE_DIR: ${detected_base_dir}"
+    else
+        log_warning "  ✗ Failed to update BASE_DIR"
+    fi
+
+    # Update UBUNTU_VERSION if detected
+    if [[ -n "$detected_ubuntu_version" ]]; then
+        if sed -i "s|^CONFIG\[UBUNTU_VERSION\]=.*|CONFIG[UBUNTU_VERSION]=\"${detected_ubuntu_version}\"|" "$CONFIG_FILE" 2>/dev/null; then
+            log_info "  ✓ UBUNTU_VERSION: ${detected_ubuntu_version}"
+        else
+            log_warning "  ✗ Failed to update UBUNTU_VERSION"
+        fi
+    fi
+
+    # Update IS_UBUNTU
+    if sed -i "s|^CONFIG\[IS_UBUNTU\]=.*|CONFIG[IS_UBUNTU]=\"${detected_is_ubuntu}\"|" "$CONFIG_FILE" 2>/dev/null; then
+        log_info "  ✓ IS_UBUNTU: ${detected_is_ubuntu}"
+    else
+        log_warning "  ✗ Failed to update IS_UBUNTU"
+    fi
+
+    echo ""
     log_success "Configuration file created at: $CONFIG_FILE"
+    echo ""
+
+    # Show what still needs manual configuration
+    log_warning "Please manually configure the following in the config file:"
+    if [[ -z "$detected_email" ]]; then
+        log_warning "  • EMAIL - Your email address"
+    fi
+    if [[ -z "$detected_fullname" ]]; then
+        log_warning "  • FULL_NAME - Your full name"
+    fi
+    log_warning "  • COMPANY - Your company/organization (or 'Personal')"
+    log_warning "  • GITHUB_USER - Your GitHub username (optional, for filtering repos)"
+    log_warning "  • Secrets (if needed):"
+    log_warning "    - GITHUB_PAT - GitHub Personal Access Token"
+    log_warning "    - GITLAB_PAT - GitLab Personal Access Token"
+    log_warning "    - Other API keys as needed"
 }
 
 update_last_run_timestamp() {
@@ -190,6 +309,45 @@ update_last_run_timestamp() {
     else
         echo "CONFIG[LAST_TIME_RUN]=\"$timestamp\"" >> "$CONFIG_FILE"
     fi
+}
+
+load_and_export_config() {
+    if [[ ! -f "$CONFIG_FILE" ]]; then
+        log_error "Configuration file not found: $CONFIG_FILE"
+        return 1
+    fi
+
+    # Declare CONFIG as associative array
+    declare -gA CONFIG
+
+    # Source the config file to read values
+    # shellcheck disable=SC1090
+    if ! source "$CONFIG_FILE" 2>/dev/null; then
+        log_error "Failed to load configuration file: $CONFIG_FILE"
+        return 1
+    fi
+
+    log_info "Exporting configuration as environment variables..."
+
+    # Export user information
+    export MYLICULA_USERNAME="${CONFIG[USERNAME]:-}"
+    export MYLICULA_EMAIL="${CONFIG[EMAIL]:-}"
+    export MYLICULA_FULL_NAME="${CONFIG[FULL_NAME]:-}"
+    export MYLICULA_COMPANY="${CONFIG[COMPANY]:-}"
+    export MYLICULA_GITHUB_USER="${CONFIG[GITHUB_USER]:-}"
+
+    # Export system paths
+    export MYLICULA_HOME="${CONFIG[HOME]:-$HOME}"
+
+    # Export installation options
+    export MYLICULA_UBUNTU_VERSION="${CONFIG[UBUNTU_VERSION]:-}"
+    export MYLICULA_IS_UBUNTU="${CONFIG[IS_UBUNTU]:-}"
+
+    # Export secrets (if present)
+    export MYLICULA_GITHUB_PAT="${CONFIG[GITHUB_PAT]:-}"
+    export MYLICULA_GITLAB_PAT="${CONFIG[GITLAB_PAT]:-}"
+
+    log_success "Configuration loaded and exported"
 }
 
 get_last_run_info() {
@@ -229,16 +387,16 @@ show_installation_menu() {
     selections=$(whiptail --title "MyLiCuLa - Select Installation Steps" \
         --checklist "\nSelect which components to install:\n(Use SPACE to select/deselect, ARROW keys to navigate, ENTER to confirm)" \
         24 78 14 \
-        "packages" "Install packages & applications" ON \
-        "snap" "Install snap applications" ON \
-        "directory" "Create directory structure" ON \
-        "bash_scripts" "Install bash scripts" ON \
-        "keyboard" "Create keyboard shortcuts" ON \
+        "packages" "Install packages & applications" OFF \
+        "snap" "Install snap applications" OFF \
+        "directory" "Create directory structure" OFF \
+        "bash_scripts" "Install bash scripts" OFF \
+        "keyboard" "Create keyboard shortcuts" OFF \
         "gitlab" "Clone GitLab repositories" OFF \
         "github" "Clone GitHub repositories" OFF \
-        "icons" "Customize UI: Install icons" ON \
-        "templates" "Customize UI: Install templates" ON \
-        "set_title" "Others: Install set-title function" ON \
+        "icons" "Customize UI: Install icons" OFF \
+        "templates" "Customize UI: Install templates" OFF \
+        "set_title" "Others: Install set-title function" OFF \
         "maven" "Others: Create Maven global configuration" OFF \
         "flyway" "3rd party apps: Flyway" OFF \
         "toolbox" "3rd party apps: Toolbox" OFF \
@@ -270,7 +428,8 @@ execute_installation_step() {
 
     # Execute with or without sudo based on needs
     if [[ "$needs_sudo" == "true" ]]; then
-        if sudo bash "$script_path"; then
+        # Pass MYLICULA_BASE_DIR to sudo environment so child scripts can find project root
+        if sudo MYLICULA_BASE_DIR="$MYLICULA_BASE_DIR" bash "$script_path"; then
             log_success "Completed: $step_name"
             return 0
         else
@@ -343,7 +502,7 @@ run_selected_installations() {
                 ;;
             keyboard)
                 if execute_installation_step "Create keyboard shortcuts" \
-                    "${SCRIPT_DIR}/setup/create_keyboard_shortcuts.sh"; then
+                    "${SCRIPT_DIR}/setup/create_keyboard_shortcuts.sh" "true"; then
                     completed_steps=$((completed_steps + 1))
                 else
                     failed_steps=$((failed_steps + 1))
@@ -483,6 +642,12 @@ main() {
 
                 # User selected components - update timestamp and start installation
                 update_last_run_timestamp
+
+                # Load configuration and export environment variables
+                if ! load_and_export_config; then
+                    log_error "Failed to load configuration"
+                    exit 1
+                fi
 
                 # Execute selected installations
                 run_selected_installations "$selections"

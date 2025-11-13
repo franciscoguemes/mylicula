@@ -52,14 +52,19 @@ if [ ! -d "$BASH_DIR" ]; then
     exit 1
 fi
 
+# Global error counter for idempotency
+error_count=0
+
 # Function to process files in a given directory
 process_files() {
     local dir="$1"
     local processed_count=0
     local skipped_count=0
-    local error_count=0
 
     echo "${COLOR_BLUE}[INFO]${COLOR_RESET} Installing bash scripts from: $dir"
+
+    # Enable nullglob to handle empty directories gracefully
+    shopt -s nullglob
 
     # Iterate over each file in the specified directory (only direct children, not subdirectories)
     for file in "$dir"/*; do
@@ -68,30 +73,43 @@ process_files() {
             continue
         fi
 
-        # Ensure it's a regular file (not a directory)
-        if [ -f "$file" ]; then
+        # Ensure it's a regular file (not a directory) and ends with .sh
+        if [ -f "$file" ] && [[ "$file" == *.sh ]]; then
             filename=$(basename "$file")
 
             # Check if the file has execute permission, if not add it
             if [ ! -x "$file" ]; then
                 echo "${COLOR_YELLOW}[INFO]${COLOR_RESET} Setting execute permissions for $filename"
-                chmod +x "$file" || {
+                if ! chmod +x "$file" 2>/dev/null; then
                     echo "${COLOR_RED}[ERROR]${COLOR_RESET} Failed to set execute permissions for $filename"
-                    ((error_count++))
+                    ((error_count++)) || true
                     continue
-                }
+                fi
             fi
 
             # Create a symlink in /usr/local/bin using the robust create_symlink function
             link_path="$BIN_DIR/$filename"
 
-            if create_symlink "$file" "$link_path" true; then
-                ((processed_count++))
+            # create_symlink returns 0 for success, 1 for error, 2 for skip
+            # We don't treat "already exists" (return 2) as an error for idempotency
+            # Capture return code without triggering set -e by using a subshell or explicit check
+            local symlink_result=0
+            if create_symlink "$file" "$link_path"; then
+                symlink_result=0
             else
-                ((error_count++))
+                symlink_result=$?
             fi
+            
+            if [ $symlink_result -eq 1 ]; then
+                # Return code 1 indicates an error
+                ((error_count++)) || true
+            fi
+            ((processed_count++)) || true
         fi
     done
+
+    # Restore nullglob
+    shopt -u nullglob
 
     echo ""
     echo "${COLOR_GREEN}[SUMMARY]${COLOR_RESET} Processed: $processed_count | Errors: $error_count"
@@ -111,21 +129,26 @@ if [ -f "$TRAVERSE_SCRIPT" ]; then
     # Check if the file has execute permission, if not add it
     if [ ! -x "$TRAVERSE_SCRIPT" ]; then
         echo "${COLOR_YELLOW}[INFO]${COLOR_RESET} Setting execute permissions for traverse.sh"
-        chmod +x "$TRAVERSE_SCRIPT" || {
+        if ! chmod +x "$TRAVERSE_SCRIPT" 2>/dev/null; then
             echo "${COLOR_RED}[ERROR]${COLOR_RESET} Failed to set execute permissions for traverse.sh"
-            ((error_count++))
-        }
+            ((error_count++)) || true
+        fi
     fi
 
     # Create symlink for traverse.sh
     link_path="$BIN_DIR/traverse.sh"
-    if create_symlink "$TRAVERSE_SCRIPT" "$link_path" true; then
-        echo "${COLOR_GREEN}[SUCCESS]${COLOR_RESET} traverse.sh installed successfully"
-        echo "${COLOR_BLUE}[INFO]${COLOR_RESET} Helper directories: $BASH_DIR/traverse/filters/ and $BASH_DIR/traverse/executioners/"
+    # Capture return code without triggering set -e
+    symlink_result=0
+    if create_symlink "$TRAVERSE_SCRIPT" "$link_path"; then
+        symlink_result=0
     else
-        echo "${COLOR_RED}[ERROR]${COLOR_RESET} Failed to install traverse.sh"
-        ((error_count++))
+        symlink_result=$?
     fi
+    if [ $symlink_result -eq 1 ]; then
+        # Return code 1 indicates an error
+        ((error_count++)) || true
+    fi
+    echo "${COLOR_BLUE}[INFO]${COLOR_RESET} Helper directories: $BASH_DIR/traverse/filters/ and $BASH_DIR/traverse/executioners/"
 else
     echo "${COLOR_YELLOW}[SKIP]${COLOR_RESET} traverse.sh not found at $TRAVERSE_SCRIPT"
 fi

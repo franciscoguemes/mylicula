@@ -72,3 +72,6 @@ do
   echo "    ${TEMPLATE_NAME}"
   create_symlink "$f" "$LINK_PATH" "verbose"
 done
+
+# Exit successfully - script is idempotent (skipping existing templates is success)
+exit 0
