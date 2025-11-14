@@ -632,7 +632,7 @@ interpolate_string() {
     declare -A interpolation_map=(
         ["USERNAME"]="${CONFIG[USERNAME]:-${MYLICULA_USERNAME:-${USER}}}"
         ["EMAIL"]="${CONFIG[EMAIL]:-${MYLICULA_EMAIL:-}}"
-        ["FULL_NAME"]="${CONFIG[FULL_NAME]:-${MYLICULA_FULL_NAME:-}}"
+        ["USERNAME_FULL_NAME"]="${CONFIG[USERNAME_FULL_NAME]:-${MYLICULA_USERNAME_FULL_NAME:-}}"
         ["COMPANY"]="${CONFIG[COMPANY]:-${MYLICULA_COMPANY:-}}"
         ["GITHUB_USER"]="${CONFIG[GITHUB_USER]:-${MYLICULA_GITHUB_USER:-}}"
         ["HOME"]="${HOME}"

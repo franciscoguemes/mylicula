@@ -26,10 +26,13 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 
 # Source common library for utility functions
-if [[ -f "${SCRIPT_DIR}/lib/common.sh" ]]; then
-    # shellcheck source=lib/common.sh
-    source "${SCRIPT_DIR}/lib/common.sh"
+if [[ ! -f "${SCRIPT_DIR}/lib/common.sh" ]]; then
+    echo "[ERROR] Cannot find required library: ${SCRIPT_DIR}/lib/common.sh" >&2
+    echo "Please ensure you are running this script from the MyLiCuLa project root directory." >&2
+    exit 1
 fi
+# shellcheck source=lib/common.sh
+source "${SCRIPT_DIR}/lib/common.sh"
 
 # Configuration paths
 CONFIG_DIR="${HOME}/.config/mylicula"
@@ -40,40 +43,9 @@ BANNER_FILE="${SCRIPT_DIR}/resources/banner/banner.txt"
 # Export base directory for child scripts
 export MYLICULA_BASE_DIR="$SCRIPT_DIR"
 
-# Colors for terminal output (when not using whiptail)
-#readonly COLOR_RED='\033[0;31m'
-#readonly COLOR_GREEN='\033[0;32m'
-#readonly COLOR_YELLOW='\033[1;33m'
-#readonly COLOR_BLUE='\033[0;34m'
-#readonly COLOR_RESET='\033[0m'
-
-#==================================================================================================
-# Output Functions
-#==================================================================================================
-
-#log_info() {
-#    echo -e "${COLOR_BLUE}[INFO]${COLOR_RESET} $*" >&2
-#}
-#
-#log_success() {
-#    echo -e "${COLOR_GREEN}[SUCCESS]${COLOR_RESET} $*" >&2
-#}
-#
-#log_warning() {
-#    echo -e "${COLOR_YELLOW}[WARNING]${COLOR_RESET} $*" >&2
-#}
-#
-#log_error() {
-#    echo -e "${COLOR_RED}[ERROR]${COLOR_RESET} $*" >&2
-#}
-
 #==================================================================================================
 # Utility Functions
 #==================================================================================================
-
-command_exists() {
-    command -v "$1" &> /dev/null
-}
 
 show_banner() {
     if [[ -f "$BANNER_FILE" ]]; then
@@ -214,11 +186,9 @@ create_config_from_example() {
     local detected_is_ubuntu
     detected_is_ubuntu=$(detect_is_ubuntu)
 
-    # Try to get email and name from git config
+    # Try to get email from git config (if user wants to use same email)
     local detected_email
     detected_email=$(git config --global user.email 2>/dev/null || echo "")
-    local detected_fullname
-    detected_fullname=$(git config --global user.name 2>/dev/null || echo "")
 
     # Update USERNAME
     if sed -i "s|^CONFIG\[USERNAME\]=.*|CONFIG[USERNAME]=\"${detected_username}\"|" "$CONFIG_FILE" 2>/dev/null; then
@@ -230,23 +200,12 @@ create_config_from_example() {
     # Update EMAIL if detected from git
     if [[ -n "$detected_email" ]]; then
         if sed -i "s|^CONFIG\[EMAIL\]=.*|CONFIG[EMAIL]=\"${detected_email}\"|" "$CONFIG_FILE" 2>/dev/null; then
-            log_info "  ✓ EMAIL: ${detected_email} (from git config)"
+            log_info "  ✓ EMAIL: ${detected_email} (suggested from git config)"
         else
             log_warning "  ✗ Failed to update EMAIL"
         fi
     else
-        log_warning "  ⚠ EMAIL: Not detected (no git config found)"
-    fi
-
-    # Update FULL_NAME if detected from git
-    if [[ -n "$detected_fullname" ]]; then
-        if sed -i "s|^CONFIG\[FULL_NAME\]=.*|CONFIG[FULL_NAME]=\"${detected_fullname}\"|" "$CONFIG_FILE" 2>/dev/null; then
-            log_info "  ✓ FULL_NAME: ${detected_fullname} (from git config)"
-        else
-            log_warning "  ✗ Failed to update FULL_NAME"
-        fi
-    else
-        log_warning "  ⚠ FULL_NAME: Not detected (no git config found)"
+        log_warning "  ⚠ EMAIL: Not detected"
     fi
 
     # Update HOME
@@ -279,6 +238,15 @@ create_config_from_example() {
         log_warning "  ✗ Failed to update IS_UBUNTU"
     fi
 
+    # Update LAST_TIME_RUN to current timestamp (first creation)
+    local timestamp
+    timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+    if sed -i "s|^CONFIG\[LAST_TIME_RUN\]=.*|CONFIG[LAST_TIME_RUN]=\"${timestamp}\"|" "$CONFIG_FILE" 2>/dev/null; then
+        log_info "  ✓ LAST_TIME_RUN: ${timestamp}"
+    else
+        log_warning "  ✗ Failed to update LAST_TIME_RUN"
+    fi
+
     echo ""
     log_success "Configuration file created at: $CONFIG_FILE"
     echo ""
@@ -286,12 +254,10 @@ create_config_from_example() {
     # Show what still needs manual configuration
     log_warning "Please manually configure the following in the config file:"
     if [[ -z "$detected_email" ]]; then
-        log_warning "  • EMAIL - Your email address"
+        log_warning "  • EMAIL - Your email address for MyLiCuLa notifications"
     fi
-    if [[ -z "$detected_fullname" ]]; then
-        log_warning "  • FULL_NAME - Your full name"
-    fi
-    log_warning "  • COMPANY - Your company/organization (or 'Personal')"
+    log_warning "  • USERNAME_FULL_NAME - Your full name (not git username)"
+    log_warning "  • COMPANY - Your current company (leave empty if unemployed)"
     log_warning "  • GITHUB_USER - Your GitHub username (optional, for filtering repos)"
     log_warning "  • Secrets (if needed):"
     log_warning "    - GITHUB_PAT - GitHub Personal Access Token"
@@ -332,7 +298,7 @@ load_and_export_config() {
     # Export user information
     export MYLICULA_USERNAME="${CONFIG[USERNAME]:-}"
     export MYLICULA_EMAIL="${CONFIG[EMAIL]:-}"
-    export MYLICULA_FULL_NAME="${CONFIG[FULL_NAME]:-}"
+    export MYLICULA_USERNAME_FULL_NAME="${CONFIG[USERNAME_FULL_NAME]:-}"
     export MYLICULA_COMPANY="${CONFIG[COMPANY]:-}"
     export MYLICULA_GITHUB_USER="${CONFIG[GITHUB_USER]:-}"
 

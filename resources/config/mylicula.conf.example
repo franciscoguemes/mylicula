@@ -18,14 +18,19 @@
 # Your system username (defaults to $USER if not specified)
 CONFIG[USERNAME]="your_username"
 
-# Your email address (used for git config, script headers, etc.)
+# Your email address for MyLiCuLa notifications and script operations
+# This is used by scripts for sending notifications, logs, and reports
+# Can be auto-detected from git config (git config --global user.email)
 CONFIG[EMAIL]="your.email@example.com"
 
-# Your full name (used in script headers, documentation)
-CONFIG[FULL_NAME]="Your Full Name"
+# Your full name (used in script headers, documentation, and notifications)
+# Note: This is YOUR full name, not your git/github username
+CONFIG[USERNAME_FULL_NAME]="Your Full Name"
 
-# Company or organization name (leave as "Personal" if not applicable)
-CONFIG[COMPANY]="Personal"
+# Company or organization you're currently working at
+# Leave empty ("") if you're not currently employed at any company
+# Example: CONFIG[COMPANY]="Acme Corp" or CONFIG[COMPANY]=""
+CONFIG[COMPANY]=""
 
 # Your GitHub username (optional - used to filter repositories when cloning)
 # If not specified, clones all repositories accessible to the authenticated user
@@ -50,9 +55,6 @@ CONFIG[BASE_DIR]="/path/to/mylicula"
 # GitHub Personal Access Token (for API access, private repos)
 # Generate at: https://github.com/settings/tokens
 # CONFIG[GITHUB_PAT]="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-
-# Other API keys as needed
-# CONFIG[SOME_API_KEY]="your_api_key_here"
 
 # =============================================================================
 # Installation Options
