@@ -1,115 +1,189 @@
 #!/usr/bin/env bash
 ####################################################################################################
-#Args           :
-#                   --debug     : Enable debug mode with extra logging information
-#                   --dry-run   : Run the script without making any changes to the system
-#                   -h, --help  : Display usage information
-#Usage          :   sudo ./install_packages.sh
-#                   sudo ./install_packages.sh --debug
-#                   sudo ./install_packages.sh --dry-run
-#Output stdout  :   Progress messages for package installation, repository additions, and GPG key imports
-#Output stderr  :   Error messages if package installation fails or required applications are missing
-#Return code    :   0 on success, 1 on error, 2 on usage error
-#Description	: This script installs Ubuntu packages from two sources:
-#                 1. standard_packages.txt - Packages from default Ubuntu repositories
-#                 2. custom_packages.txt - Packages requiring custom PPAs/repositories
+# Args           :
+#                   --debug         Enable debug logging
+#                   --dry-run       Run without making any changes
+#                   -h, --help      Display this help message
 #
-#                 The script parses custom_packages.txt for metadata comments (REPO, GPG, KEYRING)
-#                 and automatically configures repositories before installing packages.
+# Usage          : sudo ./install_packages.sh
+#                  sudo ./install_packages.sh --debug
+#                  sudo ./install_packages.sh --dry-run
 #
-#                 Format for custom_packages.txt:
-#                   # Package Group Name
-#                   # REPO: ppa:user/repo or full repository line
-#                   # GPG: URL to GPG key (optional)
-#                   # KEYRING: path to keyring file (optional)
-#                   package-name-1
-#                   package-name-2
+# Output stdout  : Progress messages for package installation, repository additions, and GPG key imports
+# Output stderr  : Error messages if package installation fails or required applications are missing
+# Return code    : 0   Success
+#                  1   Validation failure
+#                  2   Installation failure
 #
-#Author       	: Francisco Güemes
-#Email         	: francisco@franciscoguemes.com
-#See also	    : https://stackoverflow.com/questions/14008125/shell-script-common-template
-#                 https://devhints.io/bash
-#                 https://linuxhint.com/30_bash_script_examples/
-#                 https://stackoverflow.com/questions/192249/how-do-i-parse-command-line-arguments-in-bash
+# Description    : This script installs Ubuntu packages from two sources:
+#                  1. standard_packages.txt - Packages from default Ubuntu repositories
+#                  2. custom_packages.txt - Packages requiring custom PPAs/repositories
+#
+#                  The script parses custom_packages.txt for metadata comments (REPO, GPG, KEYRING)
+#                  and automatically configures repositories before installing packages.
+#
+#                  Format for custom_packages.txt:
+#                    # Package Group Name
+#                    # REPO: ppa:user/repo or full repository line
+#                    # GPG: URL to GPG key (optional)
+#                    # KEYRING: path to keyring file (optional)
+#                    package-name-1
+#                    package-name-2
+#
+#                  This script implements the MyLiCuLa installer interface for standardized
+#                  installation flow and error handling.
+#
+# Author         : Francisco Güemes
+# Email          : francisco@franciscoguemes.com
+# See also       : setup/README.md for installer interface documentation
+#                  lib/installer_common.sh for interface definitions
 ####################################################################################################
 
-#==================================================================================================
-# Global Configuration
-#==================================================================================================
-readonly SCRIPT_NAME=$(basename "$0")
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+set -euo pipefail
 
-# Find BASE_DIR - Priority 1: env var, Priority 2: search for lib/installer_common.sh
+#==================================================================================================
+# Script Setup
+#==================================================================================================
+
+# Get script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_NAME="$(basename "${BASH_SOURCE[0]}")"
+
+# Find BASE_DIR - Priority 1: env var, Priority 2: search for lib/common.sh
 if [[ -n "${MYLICULA_BASE_DIR:-}" ]]; then
     BASE_DIR="$MYLICULA_BASE_DIR"
 else
-    # Search upwards for lib/installer_common.sh (max 3 levels)
+    # Search upwards for lib/common.sh (max 3 levels)
     BASE_DIR="$SCRIPT_DIR"
     for i in {1..3}; do
-        if [[ -f "${BASE_DIR}/lib/installer_common.sh" ]]; then
+        if [[ -f "${BASE_DIR}/lib/common.sh" ]]; then
             break
         fi
         BASE_DIR="$(dirname "$BASE_DIR")"
     done
 
-    if [[ ! -f "${BASE_DIR}/lib/installer_common.sh" ]]; then
+    if [[ ! -f "${BASE_DIR}/lib/common.sh" ]]; then
         echo "[ERROR] Cannot find MyLiCuLa project root" >&2
         echo "Please set MYLICULA_BASE_DIR environment variable or run via install.sh" >&2
         exit 1
     fi
 fi
 
-readonly BASE_DIR
+# Source common libraries
+source "${BASE_DIR}/lib/common.sh"
+source "${BASE_DIR}/lib/installer_common.sh"
 
-# Source common installer functions
-if [[ -f "${BASE_DIR}/lib/installer_common.sh" ]]; then
-    # shellcheck disable=SC1091
-    source "${BASE_DIR}/lib/installer_common.sh"
-else
-    echo "ERROR: Cannot find lib/installer_common.sh" >&2
-    exit 1
-fi
+#==================================================================================================
+# Configuration
+#==================================================================================================
 
 # Package list files
 readonly STANDARD_PACKAGES_FILE="${BASE_DIR}/resources/apt/standard_packages.txt"
 readonly CUSTOM_PACKAGES_FILE="${BASE_DIR}/resources/apt/custom_packages.txt"
 
 #==================================================================================================
-# Utility Functions
+# Help Function
 #==================================================================================================
 
-# Print usage information
-usage() {
+show_help() {
     cat << EOF
-Usage: sudo ${SCRIPT_NAME} [OPTIONS]
+Package Installer for MyLiCuLa
 
-Install Ubuntu packages from standard and custom repositories.
+Usage: sudo $(basename "$0") [OPTIONS]
+
+Install Ubuntu packages from standard and custom repositories
 
 OPTIONS:
-    -h, --help      Display this help message
-    --debug         Enable debug mode with verbose logging
+    --debug         Enable debug logging with verbose output
     --dry-run       Run without making any changes to the system
-
-EXAMPLES:
-    sudo ${SCRIPT_NAME}
-    sudo ${SCRIPT_NAME} --debug
-    sudo ${SCRIPT_NAME} --dry-run
+    -h, --help      Display this help message
 
 DESCRIPTION:
     This script installs packages from two sources:
-    - standard_packages.txt: Packages from default Ubuntu repos
-    - custom_packages.txt: Packages requiring PPAs or custom repos
 
-    The script automatically configures repositories, imports GPG keys,
-    and installs packages in the correct order.
+    1. Standard Packages (resources/apt/standard_packages.txt):
+       - Packages from default Ubuntu repositories
+       - Installed using 'nala' package manager
 
+    2. Custom Packages (resources/apt/custom_packages.txt):
+       - Packages requiring PPAs or custom repositories
+       - Automatically configures repositories and GPG keys
+       - Supports metadata comments for repo configuration
+
+    Custom Package Format:
+        # Package Group Name
+        # REPO: ppa:user/repo (or full repository line)
+        # GPG: https://example.com/key.gpg (optional)
+        # KEYRING: /usr/share/keyrings/example.gpg (optional)
+        package-name-1
+        package-name-2
+
+        # Next group...
+
+REQUIREMENTS:
+    - Root privileges (run with sudo)
+    - nala package manager (installed via bootstrap.sh)
+    - curl (for downloading GPG keys)
+    - gpg (for importing keys)
+    - add-apt-repository (software-properties-common)
+
+EXAMPLES:
+    # Install all packages
+    sudo $(basename "$0")
+
+    # Install with debug output
+    sudo $(basename "$0") --debug
+
+    # Test without making changes
+    sudo $(basename "$0") --dry-run
+
+FILES:
+    Standard packages: ${STANDARD_PACKAGES_FILE}
+    Custom packages:   ${CUSTOM_PACKAGES_FILE}
+
+NOTES:
+    - The script automatically updates package lists after adding repositories
+    - Existing repositories and GPG keys are detected (idempotent)
+    - Failed package groups are logged but don't stop the entire installation
+    - All output is logged to: /var/log/mylicula/install_packages.log
+
+AUTHOR:
+    Francisco Güemes <francisco@franciscoguemes.com>
+
+SEE ALSO:
+    setup/README.md - Installer interface documentation
+    resources/apt/standard_packages.txt - Standard package list
+    resources/apt/custom_packages.txt - Custom package list with repo metadata
 EOF
 }
 
-# Check all required applications
-check_requirements() {
-    log "INFO" "Checking required applications..."
+#==================================================================================================
+# Installer Interface Implementation
+#==================================================================================================
 
+#
+# Function: get_installer_name
+# Description: Return human-readable name for this installer
+#
+get_installer_name() {
+    echo "Package Installation"
+}
+
+#
+# Function: validate_environment
+# Description: Validate that the environment is ready for installation
+#
+validate_environment() {
+    log "INFO" "Validating environment for package installation..."
+
+    # Check if we have root privileges
+    if [[ $EUID -ne 0 ]]; then
+        log "ERROR" "This script requires root privileges to install packages"
+        log "ERROR" "Please run with: sudo $(basename "$0")"
+        return 1
+    fi
+
+    # Check required applications
     local missing=false
 
     if ! check_required_app "nala" "nala"; then
@@ -133,7 +207,59 @@ check_requirements() {
         return 1
     fi
 
-    log "INFO" "All required applications are installed"
+    # Check if package list files exist
+    if [[ ! -f "$STANDARD_PACKAGES_FILE" ]]; then
+        log "ERROR" "Standard packages file not found: ${STANDARD_PACKAGES_FILE}"
+        return 1
+    fi
+
+    if [[ ! -f "$CUSTOM_PACKAGES_FILE" ]]; then
+        log "ERROR" "Custom packages file not found: ${CUSTOM_PACKAGES_FILE}"
+        return 1
+    fi
+
+    # Check idempotency - if most standard packages are installed, skip
+    # Note: This is a simplified check. A more thorough check would verify
+    # all packages, but that would be expensive.
+    debug "Package installation is not fully idempotent - will attempt to install"
+    debug "Package managers (nala/apt) handle already-installed packages gracefully"
+
+    log "INFO" "✓ Environment validation passed"
+    return 0
+}
+
+#
+# Function: run_installation
+# Description: Perform the actual installation
+#
+run_installation() {
+    log "INFO" "Starting package installation..."
+
+    # Install standard packages
+    log "INFO" ""
+    if ! install_standard_packages; then
+        log "ERROR" "Standard package installation failed"
+        return 1
+    fi
+
+    # Install custom packages
+    log "INFO" ""
+    if ! install_custom_packages; then
+        log "ERROR" "Custom package installation failed"
+        return 1
+    fi
+
+    log "INFO" "✓ Package installation completed successfully"
+    return 0
+}
+
+#
+# Function: cleanup_on_failure
+# Description: Clean up partial installation if run_installation fails
+#
+cleanup_on_failure() {
+    log "INFO" "Package installation failures are handled by package manager"
+    log "INFO" "No additional cleanup needed (packages are atomic)"
     return 0
 }
 
@@ -141,7 +267,11 @@ check_requirements() {
 # Package Installation Functions
 #==================================================================================================
 
-# Install packages from standard_packages.txt
+#
+# Function: install_standard_packages
+# Description: Install packages from standard_packages.txt
+# Return: 0 on success, 1 on failure
+#
 install_standard_packages() {
     log "INFO" "Installing standard packages..."
 
@@ -173,19 +303,23 @@ install_standard_packages() {
     log "INFO" "Found ${#packages[@]} standard packages to install (from ${line_count} lines)"
 
     if [[ ${#packages[@]} -eq 0 ]]; then
-        log "WARN" "No standard packages to install"
+        log "INFO" "No standard packages to install"
         return 0
     fi
 
     # Install packages
     if [[ "$DRY_RUN_MODE" == true ]]; then
-        log "INFO" "[DRY-RUN] Would install: ${packages[*]}"
+        log "INFO" "[DRY-RUN] Would install ${#packages[@]} packages:"
+        for pkg in "${packages[@]}"; do
+            log "INFO" "[DRY-RUN]   - $pkg"
+        done
     else
-        log "INFO" "Installing packages with nala..."
+        log "INFO" "Installing ${#packages[@]} packages with nala..."
         if nala install -y "${packages[@]}" >> "$LOG_FILE" 2>&1; then
             log "INFO" "Successfully installed ${#packages[@]} standard packages"
         else
             log "ERROR" "Failed to install some standard packages (see log for details)"
+            log "ERROR" "Log file: ${LOG_FILE}"
             return 1
         fi
     fi
@@ -193,7 +327,13 @@ install_standard_packages() {
     return 0
 }
 
-# Add PPA repository
+#
+# Function: add_ppa_repository
+# Description: Add PPA repository
+# Args:
+#   $1 - PPA identifier (e.g., ppa:user/repo)
+# Return: 0 on success, 1 on failure
+#
 add_ppa_repository() {
     local ppa=$1
 
@@ -213,7 +353,13 @@ add_ppa_repository() {
     fi
 }
 
-# Add custom repository line
+#
+# Function: add_custom_repository
+# Description: Add custom repository line
+# Args:
+#   $1 - Repository line (e.g., "deb [signed-by=...] https://...")
+# Return: 0 on success, 1 on failure
+#
 add_custom_repository() {
     local repo_line=$1
     local list_file="/etc/apt/sources.list.d/mylicula-custom.list"
@@ -242,7 +388,14 @@ add_custom_repository() {
     fi
 }
 
-# Import GPG key
+#
+# Function: import_gpg_key
+# Description: Import GPG key from URL
+# Args:
+#   $1 - GPG key URL
+#   $2 - Keyring file path
+# Return: 0 on success, 1 on failure
+#
 import_gpg_key() {
     local gpg_url=$1
     local keyring_path=$2
@@ -279,7 +432,16 @@ import_gpg_key() {
     fi
 }
 
-# Install a package group (packages with same repository configuration)
+#
+# Function: install_package_group
+# Description: Install a package group (packages with same repository configuration)
+# Args:
+#   $1 - Repository (PPA or custom line)
+#   $2 - GPG key URL (optional)
+#   $3 - Keyring path (optional)
+#   $4+ - Package names
+# Return: 0 on success, 1 on failure
+#
 install_package_group() {
     local repo=$1
     local gpg_key=$2
@@ -316,7 +478,8 @@ install_package_group() {
         if [[ "$DRY_RUN_MODE" == false ]]; then
             debug "Updating package lists..."
             if ! nala update >> "$LOG_FILE" 2>&1; then
-                log "WARN" "Failed to update package lists"
+                log "ERROR" "Failed to update package lists"
+                return 1
             fi
         fi
     fi
@@ -336,7 +499,11 @@ install_package_group() {
     return 0
 }
 
-# Parse and install packages from custom_packages.txt
+#
+# Function: install_custom_packages
+# Description: Parse and install packages from custom_packages.txt
+# Return: 0 on success, 1 on failure
+#
 install_custom_packages() {
     log "INFO" "Installing custom packages..."
 
@@ -397,58 +564,46 @@ install_custom_packages() {
 }
 
 #==================================================================================================
-# Main Script
+# Main Function
 #==================================================================================================
 
 main() {
-    # Parse command-line arguments
+    # Parse arguments
     while [[ $# -gt 0 ]]; do
-        if parse_common_args "$1" "usage"; then
-            shift
-            continue
-        fi
-
-        # No script-specific arguments, so this is unknown
-        echo "ERROR: Unknown option: $1" >&2
-        echo "       Use -h or --help for usage information" >&2
-        exit 2
+        case $1 in
+            -h|--help)
+                show_help
+                exit 0
+                ;;
+            --debug)
+                DEBUG_MODE=true
+                shift
+                ;;
+            --dry-run)
+                DRY_RUN_MODE=true
+                shift
+                ;;
+            *)
+                log_error "Unknown option: $1"
+                echo ""
+                show_help
+                exit 1
+                ;;
+        esac
     done
 
-    # Setup common installer infrastructure (root check + logging)
+    # Setup logging
     setup_installer_common
 
-    log "INFO" "========================================"
-    log "INFO" "MyLiCuLa Package Installation"
-    log "INFO" "========================================"
-    log "INFO" "Debug mode: ${DEBUG_MODE}"
-    log "INFO" "Dry-run mode: ${DRY_RUN_MODE}"
-    log "INFO" ""
-
-    # Check requirements
-    if ! check_requirements; then
-        exit 1
-    fi
-
-    # Install standard packages
-    log "INFO" ""
-    if ! install_standard_packages; then
-        log "ERROR" "Standard package installation failed"
-        exit 1
-    fi
-
-    # Install custom packages
-    log "INFO" ""
-    if ! install_custom_packages; then
-        log "ERROR" "Custom package installation failed"
-        exit 1
-    fi
-
-    log "INFO" ""
-    log "INFO" "========================================"
-    log "INFO" "Package installation completed successfully"
-    log "INFO" "========================================"
-    log "INFO" "Log file: ${LOG_FILE}"
+    # Execute the installer using the standard interface
+    execute_installer
 }
 
-# Run main function
-main "$@"
+#==================================================================================================
+# Script Entry Point
+#==================================================================================================
+
+# Only run main if script is executed directly (not sourced)
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    main "$@"
+fi
