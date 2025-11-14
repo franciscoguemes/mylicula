@@ -17,30 +17,82 @@ Define in `.claude/commands/`:
 - `/test-dry-run` - Simulate installation with .target directory review
 - `/check-syntax` - Validate bash syntax for all scripts
 
+## Installer Interface (REQUIRED)
+
+**All scripts in `setup/` MUST implement the standard installer interface.**
+
+The interface is **enforced at runtime**. Scripts that don't implement it will be rejected with a clear error message.
+
+### Required Functions (3):
+1. `get_installer_name()` - Return human-readable installer name
+2. `validate_environment()` - Check prerequisites and readiness (return 0=ready, 1=failed, 2=already installed)
+3. `run_installation()` - Perform the actual installation (return 0=success, 1=failure)
+
+### Optional Functions (1):
+4. `cleanup_on_failure()` - Clean up after installation failure (default implementation does nothing)
+
+### Template and Documentation:
+- **Template**: `setup/template_installer.sh` - Complete example implementation
+- **Documentation**: `setup/README.md` - Full interface specification
+- **Library**: `lib/installer_common.sh` - Interface definition and execution flow
+
+### Script Structure:
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Find BASE_DIR and source libraries
+source "${BASE_DIR}/lib/common.sh"
+source "${BASE_DIR}/lib/installer_common.sh"
+
+# Implement required functions
+get_installer_name() { echo "My Installer"; }
+validate_environment() { ...; return 0; }
+run_installation() { ...; return 0; }
+
+# Main function: parse args and call execute_installer
+main() {
+    setup_installer_common  # Initialize logging
+    execute_installer       # Run standard flow
+}
+
+main "$@"
+```
+
 ## Script Development Workflow
 1. Determine script type: installation (`setup/`), uninstall (`uninstall/`), or resources (`resources/`)
-2. Create script in `in_review/` directory
-3. Follow conventions from existing production scripts in `setup/`
-4. Add documentation header describing purpose and usage
-5. Add function documentation for all functions
-6. Implement your customization logic
+2. Create script in `in_review/` directory using `setup/template_installer.sh` as base
+3. **Implement the installer interface** (get_installer_name, validate_environment, run_installation)
+4. Follow conventions from existing production scripts in `setup/`
+5. Add documentation header describing purpose and usage
+6. Add function documentation for all functions
 7. Test syntax: `bash -n in_review/your_script.sh`
-8. Once thoroughly tested and approved, move to appropriate production directory (`setup/`, `uninstall/`, or `resources/`)
-9. Commit with clear message about the customization being added
+8. Test with dry-run: `sudo in_review/your_script.sh --dry-run --debug`
+9. Once thoroughly tested and approved, move to appropriate production directory (`setup/`, `uninstall/`, or `resources/`)
+10. Commit with clear message about the customization being added
 
 ## Code Review Checklist
 When developing MyLiCuLa scripts, verify:
-1. Script follows conventions from existing production scripts in `setup/`
-2. Documentation header is complete and clear
-3. All functions have parameter documentation
-4. Global variable names are consistent with existing scripts
-5. Syntax passes: `bash -n in_review/**/*.sh` and `bash -n setup/**/*.sh`
-6. No hardcoded paths (use interpolation: <<<KEY>>>)
-7. Interactive prompts are clear for user input
-8. Works with bash 4.0+
-9. Appropriate directory: `setup/` for install, `uninstall/` for removal, `resources/` for data
-10. Aligns with General Conventions philosophy
-11. Ready to move from `in_review/` to production after approval
+1. **Implements installer interface** (REQUIRED for setup/ scripts):
+   - ✓ `get_installer_name()` implemented
+   - ✓ `validate_environment()` implemented with proper return codes (0/1/2)
+   - ✓ `run_installation()` implemented
+   - ✓ `cleanup_on_failure()` implemented if cleanup needed
+   - ✓ Sources `lib/common.sh` and `lib/installer_common.sh`
+   - ✓ Calls `execute_installer` in main function
+2. Script follows conventions from existing production scripts in `setup/`
+3. Documentation header is complete and clear
+4. All functions have parameter documentation
+5. Global variable names are consistent with existing scripts
+6. Syntax passes: `bash -n in_review/**/*.sh` and `bash -n setup/**/*.sh`
+7. No hardcoded paths (use interpolation: <<<KEY>>>)
+8. Interactive prompts are clear for user input
+9. Works with bash 4.0+
+10. Appropriate directory: `setup/` for install, `uninstall/` for removal, `resources/` for data
+11. Dry-run and debug modes work correctly (`--dry-run`, `--debug`)
+12. Idempotency: Safe to run multiple times
+13. Aligns with General Conventions philosophy
+14. Ready to move from `in_review/` to production after approval
 
 ## Common Patterns in MyLiCuLa Scripts
 - Convention-based approach: Follow existing patterns from `setup/` production scripts

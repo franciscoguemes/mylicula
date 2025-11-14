@@ -228,3 +228,213 @@ setup_installer_common() {
     # Initialize logging
     init_logging
 }
+
+#==================================================================================================
+# Installer Interface (Template Method Pattern)
+#==================================================================================================
+# These functions define the standard interface that all installer scripts MUST implement.
+# This provides consistency across all installers and allows install.sh to interact with
+# them in a predictable way.
+#
+# See setup/template_installer.sh for a complete example implementation.
+# See setup/README.md for detailed documentation.
+#==================================================================================================
+
+#
+# Function: get_installer_name
+# Description: Return human-readable name for this installer
+#              MUST be implemented by child scripts
+# Args: None
+# Usage: installer_name=$(get_installer_name)
+# Output (stdout): Human-readable installer name
+# Output (stderr): Error if not implemented
+# Return code: 0 on success, 1 if not implemented
+#
+get_installer_name() {
+    log_error "get_installer_name() not implemented!"
+    log_error "This function must be implemented by the installer script"
+    return 1
+}
+
+#
+# Function: validate_environment
+# Description: Validate that the environment is ready for installation
+#              MUST be implemented by child scripts
+#
+#              Should check:
+#              - Required applications are installed
+#              - Required permissions are available
+#              - Installation is not already complete (idempotency)
+#              - Configuration values are valid
+#              - Disk space is available (if relevant)
+#
+# Args: None
+# Usage: if validate_environment; then ...; fi
+# Output (stdout): Validation messages
+# Output (stderr): Error messages if validation fails
+# Return code:
+#   0 - Validation passed, ready to install
+#   1 - Validation failed, cannot proceed
+#   2 - Already installed, skip installation (idempotent)
+#
+validate_environment() {
+    log_error "validate_environment() not implemented!"
+    log_error "This function must be implemented by the installer script"
+    return 1
+}
+
+#
+# Function: run_installation
+# Description: Perform the actual installation
+#              MUST be implemented by child scripts
+#
+#              Should:
+#              - Be idempotent (safe to run multiple times)
+#              - Respect DRY_RUN_MODE if set
+#              - Provide progress feedback via log functions
+#              - Clean up on failure (or delegate to cleanup_on_failure)
+#
+# Args: None
+# Usage: if run_installation; then ...; fi
+# Output (stdout): Installation progress messages
+# Output (stderr): Error messages if installation fails
+# Return code: 0 on success, 1 on failure
+#
+run_installation() {
+    log_error "run_installation() not implemented!"
+    log_error "This function must be implemented by the installer script"
+    return 1
+}
+
+#
+# Function: cleanup_on_failure
+# Description: Clean up partial installation if run_installation fails
+#              OPTIONAL - can be overridden by child scripts
+#              Default implementation does nothing
+#
+# Args: None
+# Usage: cleanup_on_failure
+# Output (stdout): Cleanup messages
+# Output (stderr): Error messages if cleanup fails
+# Return code: 0 on success, 1 on failure
+#
+cleanup_on_failure() {
+    # Default implementation: do nothing
+    debug "No cleanup needed (default implementation)"
+    return 0
+}
+
+#
+# Function: execute_installer
+# Description: Standard execution flow for installer scripts
+#              Call this from main() in your installer script
+#
+#              Execution flow:
+#              1. Verify required interface functions are implemented
+#              2. Get installer name
+#              3. Validate environment
+#              4. Run installation (if validation passes)
+#              5. Cleanup on failure (if installation fails)
+#
+# Args: None
+# Usage: execute_installer
+# Output (stdout): Progress and status messages
+# Output (stderr): Error messages
+# Return code: 0 on success, 1 on validation failure, 2 on installation failure
+#
+execute_installer() {
+    local installer_name
+    local validation_result
+
+    # ========================================
+    # PHASE 5: INTERFACE ENFORCEMENT
+    # ========================================
+    # Verify all required functions are implemented
+    # This ensures all installer scripts follow the standard interface
+
+    local required_functions=("get_installer_name" "validate_environment" "run_installation")
+    local missing_functions=()
+
+    for func in "${required_functions[@]}"; do
+        # Check if function is declared
+        if ! declare -F "$func" >/dev/null 2>&1; then
+            missing_functions+=("$func")
+        else
+            # Check if it's not the default stub implementation
+            # (default stubs contain "not implemented!" in their source)
+            local func_source
+            func_source=$(declare -f "$func" 2>/dev/null)
+            if [[ "$func_source" =~ "not implemented!" ]]; then
+                missing_functions+=("$func")
+            fi
+        fi
+    done
+
+    # If any required functions are missing or not implemented, fail with clear error
+    if [[ ${#missing_functions[@]} -gt 0 ]]; then
+        echo "========================================" >&2
+        echo "ERROR: Installer Interface Not Implemented" >&2
+        echo "========================================" >&2
+        echo "" >&2
+        echo "This script does not properly implement the MyLiCuLa installer interface." >&2
+        echo "" >&2
+        echo "Missing or not implemented functions:" >&2
+        for func in "${missing_functions[@]}"; do
+            echo "  ✗ ${func}()" >&2
+        done
+        echo "" >&2
+        echo "All installer scripts MUST implement these required functions:" >&2
+        echo "  - get_installer_name()    : Return human-readable installer name" >&2
+        echo "  - validate_environment()  : Check prerequisites and readiness" >&2
+        echo "  - run_installation()      : Perform the actual installation" >&2
+        echo "" >&2
+        echo "Optional functions:" >&2
+        echo "  - cleanup_on_failure()    : Clean up after installation failure" >&2
+        echo "" >&2
+        echo "Documentation:" >&2
+        echo "  - See setup/README.md for interface documentation" >&2
+        echo "  - See setup/template_installer.sh for example implementation" >&2
+        echo "  - See lib/installer_common.sh for function specifications" >&2
+        echo "" >&2
+        echo "========================================" >&2
+        return 1
+    fi
+
+    debug "✓ Interface validation passed - all required functions implemented"
+
+    # Get installer name
+    if ! installer_name=$(get_installer_name); then
+        log_error "Failed to get installer name"
+        return 1
+    fi
+
+    log "INFO" "=========================================="
+    log "INFO" "Installer: $installer_name"
+    log "INFO" "=========================================="
+
+    # Validate environment
+    log "INFO" "Step 1/2: Validating environment..."
+    if ! validate_environment; then
+        validation_result=$?
+        if [[ $validation_result -eq 2 ]]; then
+            log "INFO" "✓ Already installed (skipping)"
+            return 0
+        else
+            log "ERROR" "✗ Validation failed"
+            return 1
+        fi
+    fi
+    log "INFO" "✓ Validation passed"
+
+    # Run installation
+    log "INFO" "Step 2/2: Running installation..."
+    if run_installation; then
+        log "INFO" "✓ Installation completed successfully"
+        return 0
+    else
+        log "ERROR" "✗ Installation failed"
+        log "INFO" "Running cleanup..."
+        cleanup_on_failure
+        return 2
+    fi
+}

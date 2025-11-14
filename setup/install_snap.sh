@@ -1,118 +1,218 @@
 #!/usr/bin/env bash
 ####################################################################################################
-#Args           :
-#                   --debug     : Enable debug mode with extra logging information
-#                   --dry-run   : Run the script without making any changes to the system
-#                   -h, --help  : Display usage information
-#Usage          :   sudo ./install_snap.sh
-#                   sudo ./install_snap.sh --debug
-#                   sudo ./install_snap.sh --dry-run
-#Output stdout  :   Progress messages for snap package installation
-#Output stderr  :   Error messages if package installation fails or required applications are missing
-#Return code    :   0 on success, 1 on error, 2 on usage error
-#Description	: This script installs snap packages from list_of_snap.txt
+# Args           :
+#                   --debug         Enable debug logging
+#                   --dry-run       Run without making any changes
+#                   -h, --help      Display this help message
 #
-#                 The script parses the file for metadata comments (FLAGS) and automatically
-#                 applies the correct flags when installing packages.
+# Usage          : sudo ./install_snap.sh
+#                  sudo ./install_snap.sh --debug
+#                  sudo ./install_snap.sh --dry-run
 #
-#                 Format for list_of_snap.txt:
-#                   # Package Group Name
-#                   # FLAGS: --classic (or other snap install flags)
-#                   package-name-1
-#                   package-name-2
+# Output stdout  : Progress messages for snap package installation
+# Output stderr  : Error messages if package installation fails or required applications are missing
+# Return code    : 0   Success
+#                  1   Validation failure
+#                  2   Installation failure
 #
-#Author       	: Francisco Güemes
-#Email         	: francisco@franciscoguemes.com
-#See also	    : https://stackoverflow.com/questions/14008125/shell-script-common-template
-#                 https://devhints.io/bash
-#                 https://linuxhint.com/30_bash_script_examples/
-#                 https://stackoverflow.com/questions/192249/how-do-i-parse-command-line-arguments-in-bash
+# Description    : This script installs snap packages from list_of_snap.txt
+#
+#                  The script parses the file for metadata comments (FLAGS) and automatically
+#                  applies the correct flags when installing packages.
+#
+#                  Format for list_of_snap.txt:
+#                    # Package Group Name
+#                    # FLAGS: --classic (or other snap install flags)
+#                    package-name-1
+#                    package-name-2
+#
+#                  This script implements the MyLiCuLa installer interface for standardized
+#                  installation flow and error handling.
+#
+# Author         : Francisco Güemes
+# Email          : francisco@franciscoguemes.com
+# See also       : setup/README.md for installer interface documentation
+#                  lib/installer_common.sh for interface definitions
 ####################################################################################################
 
-#==================================================================================================
-# Global Configuration
-#==================================================================================================
-readonly SCRIPT_NAME=$(basename "$0")
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+set -euo pipefail
 
-# Find BASE_DIR - Priority 1: env var, Priority 2: search for lib/installer_common.sh
+#==================================================================================================
+# Script Setup
+#==================================================================================================
+
+# Get script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_NAME="$(basename "${BASH_SOURCE[0]}")"
+
+# Find BASE_DIR - Priority 1: env var, Priority 2: search for lib/common.sh
 if [[ -n "${MYLICULA_BASE_DIR:-}" ]]; then
     BASE_DIR="$MYLICULA_BASE_DIR"
 else
-    # Search upwards for lib/installer_common.sh (max 3 levels)
+    # Search upwards for lib/common.sh (max 3 levels)
     BASE_DIR="$SCRIPT_DIR"
     for i in {1..3}; do
-        if [[ -f "${BASE_DIR}/lib/installer_common.sh" ]]; then
+        if [[ -f "${BASE_DIR}/lib/common.sh" ]]; then
             break
         fi
         BASE_DIR="$(dirname "$BASE_DIR")"
     done
 
-    if [[ ! -f "${BASE_DIR}/lib/installer_common.sh" ]]; then
+    if [[ ! -f "${BASE_DIR}/lib/common.sh" ]]; then
         echo "[ERROR] Cannot find MyLiCuLa project root" >&2
         echo "Please set MYLICULA_BASE_DIR environment variable or run via install.sh" >&2
         exit 1
     fi
 fi
 
-readonly BASE_DIR
+# Source common libraries
+source "${BASE_DIR}/lib/common.sh"
+source "${BASE_DIR}/lib/installer_common.sh"
 
-# Source common installer functions
-if [[ -f "${BASE_DIR}/lib/installer_common.sh" ]]; then
-    # shellcheck disable=SC1091
-    source "${BASE_DIR}/lib/installer_common.sh"
-else
-    echo "ERROR: Cannot find lib/installer_common.sh" >&2
-    exit 1
-fi
+#==================================================================================================
+# Configuration
+#==================================================================================================
 
 # Snap packages list file
 readonly SNAP_PACKAGES_FILE="${BASE_DIR}/resources/snap/list_of_snap.txt"
 
 #==================================================================================================
-# Utility Functions
+# Help Function
 #==================================================================================================
 
-# Print usage information
-usage() {
+show_help() {
     cat << EOF
-Usage: sudo ${SCRIPT_NAME} [OPTIONS]
+Snap Package Installer for MyLiCuLa
 
-Install snap packages from list_of_snap.txt.
+Usage: sudo $(basename "$0") [OPTIONS]
+
+Install snap packages from list_of_snap.txt
 
 OPTIONS:
-    -h, --help      Display this help message
-    --debug         Enable debug mode with verbose logging
+    --debug         Enable debug logging with verbose output
     --dry-run       Run without making any changes to the system
-
-EXAMPLES:
-    sudo ${SCRIPT_NAME}
-    sudo ${SCRIPT_NAME} --debug
-    sudo ${SCRIPT_NAME} --dry-run
+    -h, --help      Display this help message
 
 DESCRIPTION:
     This script installs snap packages with support for installation flags
-    (like --classic) specified in metadata comments.
+    (like --classic, --edge, --beta) specified in metadata comments.
 
+    Package List Format (resources/snap/list_of_snap.txt):
+        # Package Group Name
+        # FLAGS: --classic (or other snap install flags)
+        package-name-1
+        package-name-2
+
+        # Another group with different flags
+        # FLAGS: --edge
+        package-name-3
+
+    Common Snap Flags:
+        --classic       : Install classic snap (full system access)
+        --edge          : Install from edge channel (latest development)
+        --beta          : Install from beta channel (pre-release)
+        --candidate     : Install from candidate channel (release candidate)
+        --stable        : Install from stable channel (default)
+
+REQUIREMENTS:
+    - Root privileges (run with sudo)
+    - snapd package manager (installed via bootstrap.sh)
+
+EXAMPLES:
+    # Install all snap packages
+    sudo $(basename "$0")
+
+    # Install with debug output
+    sudo $(basename "$0") --debug
+
+    # Test without making changes
+    sudo $(basename "$0") --dry-run
+
+FILES:
+    Snap packages: ${SNAP_PACKAGES_FILE}
+
+NOTES:
+    - Snap packages are installed individually (not in batch)
+    - Existing snaps are detected and skipped automatically
+    - All output is logged to: /var/log/mylicula/install_snap.log
+
+AUTHOR:
+    Francisco Güemes <francisco@franciscoguemes.com>
+
+SEE ALSO:
+    setup/README.md - Installer interface documentation
+    resources/snap/list_of_snap.txt - Snap package list with flags
 EOF
 }
 
-# Check all required applications
-check_requirements() {
-    log "INFO" "Checking required applications..."
+#==================================================================================================
+# Installer Interface Implementation
+#==================================================================================================
 
-    local missing=false
+#
+# Function: get_installer_name
+# Description: Return human-readable name for this installer
+#
+get_installer_name() {
+    echo "Snap Package Installation"
+}
 
-    if ! check_required_app "snap" "sudo apt install snapd"; then
-        missing=true
-    fi
+#
+# Function: validate_environment
+# Description: Validate that the environment is ready for installation
+#
+validate_environment() {
+    log "INFO" "Validating environment for snap package installation..."
 
-    if [[ "$missing" == true ]]; then
-        log "ERROR" "Missing required applications. Cannot continue."
+    # Check if we have root privileges
+    if [[ $EUID -ne 0 ]]; then
+        log "ERROR" "This script requires root privileges to install snap packages"
+        log "ERROR" "Please run with: sudo $(basename "$0")"
         return 1
     fi
 
-    log "INFO" "All required applications are installed"
+    # Check required applications
+    if ! check_required_app "snap" "sudo nala install snapd"; then
+        log "ERROR" "Missing required application: snap"
+        return 1
+    fi
+
+    # Check if snap packages file exists
+    if [[ ! -f "$SNAP_PACKAGES_FILE" ]]; then
+        log "ERROR" "Snap packages file not found: ${SNAP_PACKAGES_FILE}"
+        return 1
+    fi
+
+    # Check idempotency - snap handles already-installed packages gracefully
+    debug "Snap installation is idempotent - snap handles already-installed packages"
+
+    log "INFO" "✓ Environment validation passed"
+    return 0
+}
+
+#
+# Function: run_installation
+# Description: Perform the actual installation
+#
+run_installation() {
+    log "INFO" "Starting snap package installation..."
+
+    if ! install_snap_packages; then
+        log "ERROR" "Snap package installation failed"
+        return 1
+    fi
+
+    log "INFO" "✓ Snap package installation completed successfully"
+    return 0
+}
+
+#
+# Function: cleanup_on_failure
+# Description: Clean up partial installation if run_installation fails
+#
+cleanup_on_failure() {
+    log "INFO" "Snap installation failures are handled by snap daemon"
+    log "INFO" "No additional cleanup needed (snap is atomic per package)"
     return 0
 }
 
@@ -120,43 +220,102 @@ check_requirements() {
 # Snap Package Installation Functions
 #==================================================================================================
 
-# Install a package or package group with specified flags
+#
+# Function: install_snap_package
+# Description: Install a single snap package with specified flags
+# Args:
+#   $1 - Package name
+#   $2 - Installation flags (optional)
+# Return: 0 on success, 1 on failure
+#
 install_snap_package() {
+    local package=$1
+    local flags=${2:-}
+
+    if [[ "$DRY_RUN_MODE" == true ]]; then
+        if [[ -n "$flags" ]]; then
+            log "INFO" "[DRY-RUN] Would install: snap install ${flags} ${package}"
+        else
+            log "INFO" "[DRY-RUN] Would install: snap install ${package}"
+        fi
+        return 0
+    fi
+
+    log "INFO" "Installing: ${package}"
+    if [[ -n "$flags" ]]; then
+        debug "  Using flags: ${flags}"
+    fi
+
+    # Install snap package
+    if snap install ${flags} "${package}" >> "$LOG_FILE" 2>&1; then
+        log "INFO" "Successfully installed: ${package}"
+        return 0
+    else
+        # Check if it's already installed (snap returns error for already installed)
+        if snap list "${package}" &>/dev/null; then
+            debug "Package already installed: ${package}"
+            return 0
+        else
+            log "ERROR" "Failed to install: ${package}"
+            log "ERROR" "Check log for details: ${LOG_FILE}"
+            return 1
+        fi
+    fi
+}
+
+#
+# Function: install_package_group
+# Description: Install a group of snap packages with the same flags
+# Args:
+#   $1 - Installation flags (optional)
+#   $2+ - Package names
+# Return: 0 on success (even if some packages fail)
+#
+install_package_group() {
     local flags=$1
     shift
     local -a packages=("$@")
 
     if [[ ${#packages[@]} -eq 0 ]]; then
-        debug "No packages to install"
+        debug "No packages to install in this group"
         return 0
     fi
 
-    log "INFO" "Installing snap package(s): ${packages[*]}"
+    log "INFO" "Installing package group (${#packages[@]} packages)..."
     if [[ -n "$flags" ]]; then
-        debug "  Using flags: ${flags}"
+        log "INFO" "  Using flags: ${flags}"
     fi
+
+    local success_count=0
+    local fail_count=0
 
     # Install each package individually (snap doesn't support batch installs like apt)
     for package in "${packages[@]}"; do
-        if [[ "$DRY_RUN_MODE" == true ]]; then
-            log "INFO" "[DRY-RUN] Would install: snap install ${flags} ${package}"
+        if install_snap_package "$package" "$flags"; then
+            ((success_count++))
         else
-            log "INFO" "Installing: ${package}"
-            if snap install ${flags} "${package}" >> "$LOG_FILE" 2>&1; then
-                log "INFO" "Successfully installed: ${package}"
-            else
-                log "ERROR" "Failed to install: ${package}"
-                return 1
-            fi
+            ((fail_count++))
         fi
     done
 
-    return 0
+    log "INFO" "Package group results: ${success_count} successful, ${fail_count} failed"
+
+    # Return success if at least some packages installed
+    # This prevents one bad package from stopping the entire installation
+    if [[ $success_count -gt 0 ]] || [[ $fail_count -eq 0 ]]; then
+        return 0
+    else
+        return 1
+    fi
 }
 
-# Parse and install snap packages from list_of_snap.txt
+#
+# Function: install_snap_packages
+# Description: Parse and install snap packages from list_of_snap.txt
+# Return: 0 on success, 1 on failure
+#
 install_snap_packages() {
-    log "INFO" "Installing snap packages..."
+    log "INFO" "Processing snap packages from: ${SNAP_PACKAGES_FILE}"
 
     if [[ ! -f "$SNAP_PACKAGES_FILE" ]]; then
         log "ERROR" "Snap packages file not found: ${SNAP_PACKAGES_FILE}"
@@ -183,7 +342,7 @@ install_snap_packages() {
             # Empty line - install accumulated packages if any
             if [[ ${#packages[@]} -gt 0 ]]; then
                 ((group_count++))
-                install_snap_package "$flags" "${packages[@]}"
+                install_package_group "$flags" "${packages[@]}"
                 total_packages=$((total_packages + ${#packages[@]}))
 
                 # Reset for next group
@@ -203,7 +362,7 @@ install_snap_packages() {
     # Install last group if any packages remain
     if [[ ${#packages[@]} -gt 0 ]]; then
         ((group_count++))
-        install_snap_package "$flags" "${packages[@]}"
+        install_package_group "$flags" "${packages[@]}"
         total_packages=$((total_packages + ${#packages[@]}))
     fi
 
@@ -212,51 +371,46 @@ install_snap_packages() {
 }
 
 #==================================================================================================
-# Main Script
+# Main Function
 #==================================================================================================
 
 main() {
-    # Parse command-line arguments
+    # Parse arguments
     while [[ $# -gt 0 ]]; do
-        if parse_common_args "$1" "usage"; then
-            shift
-            continue
-        fi
-
-        # No script-specific arguments, so this is unknown
-        echo "ERROR: Unknown option: $1" >&2
-        echo "       Use -h or --help for usage information" >&2
-        exit 2
+        case $1 in
+            -h|--help)
+                show_help
+                exit 0
+                ;;
+            --debug)
+                DEBUG_MODE=true
+                shift
+                ;;
+            --dry-run)
+                DRY_RUN_MODE=true
+                shift
+                ;;
+            *)
+                log_error "Unknown option: $1"
+                echo ""
+                show_help
+                exit 1
+                ;;
+        esac
     done
 
-    # Setup common installer infrastructure (root check + logging)
+    # Setup logging
     setup_installer_common
 
-    log "INFO" "========================================"
-    log "INFO" "MyLiCuLa Snap Package Installation"
-    log "INFO" "========================================"
-    log "INFO" "Debug mode: ${DEBUG_MODE}"
-    log "INFO" "Dry-run mode: ${DRY_RUN_MODE}"
-    log "INFO" ""
-
-    # Check requirements
-    if ! check_requirements; then
-        exit 1
-    fi
-
-    # Install snap packages
-    log "INFO" ""
-    if ! install_snap_packages; then
-        log "ERROR" "Snap package installation failed"
-        exit 1
-    fi
-
-    log "INFO" ""
-    log "INFO" "========================================"
-    log "INFO" "Snap package installation completed successfully"
-    log "INFO" "========================================"
-    log "INFO" "Log file: ${LOG_FILE}"
+    # Execute the installer using the standard interface
+    execute_installer
 }
 
-# Run main function
-main "$@"
+#==================================================================================================
+# Script Entry Point
+#==================================================================================================
+
+# Only run main if script is executed directly (not sourced)
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    main "$@"
+fi
