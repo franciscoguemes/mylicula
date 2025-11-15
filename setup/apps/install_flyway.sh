@@ -69,7 +69,7 @@ source "${BASE_DIR}/lib/installer_common.sh"
 # Configuration
 #==================================================================================================
 
-# Flyway installation directories
+# Flyway installation directories (system-wide locations)
 readonly FLYWAY_INSTALL_DIR="/opt/flyway"
 readonly FLYWAY_BIN="/usr/local/bin/flyway"
 
@@ -131,7 +131,9 @@ FILES:
     Binary link: ${FLYWAY_BIN}
 
 NOTES:
-    - Flyway is installed to /opt/flyway
+    - Flyway is installed to /opt/flyway (system-wide)
+    - Binary symlink in /usr/local/bin/flyway (in PATH for all users)
+    - Requires sudo for installation
     - Existing installation is replaced during updates
     - Version is checked against Redgate S3 repository
 
@@ -162,13 +164,6 @@ get_installer_name() {
 #
 validate_environment() {
     log "INFO" "Validating environment for Flyway installation..."
-
-    # Check if we have root privileges
-    if [[ $EUID -ne 0 ]]; then
-        log "ERROR" "This script requires root privileges to install Flyway"
-        log "ERROR" "Please run with: sudo $(basename "$0")"
-        return 1
-    fi
 
     # Check required applications
     if ! check_required_app "wget" "sudo nala install wget"; then
@@ -439,8 +434,8 @@ main() {
         esac
     done
 
-    # Setup logging (no-root: installs to user's home directory)
-    setup_installer_common "no-root"
+    # Setup logging (requires root for /opt/ and /usr/local/bin/ installation)
+    setup_installer_common
 
     # Execute the installer using the standard interface
     execute_installer
