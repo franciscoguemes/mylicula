@@ -121,7 +121,7 @@ check_sudo_required() {
     # Check if any of the selected steps require sudo
     for item in $selections; do
         case "$item" in
-            packages|snap|directory|bash_scripts|keyboard)
+            packages|snap|directory|bash_scripts)
                 return 0  # Requires sudo
                 ;;
         esac
@@ -144,6 +144,36 @@ prompt_sudo_early() {
         log_error "Failed to obtain sudo privileges"
         return 1
     fi
+}
+
+setup_log_directory() {
+    local log_dir="/var/log/mylicula"
+    local actual_user="${MYLICULA_USERNAME:-${USER}}"
+
+    log_info "Setting up log directory: $log_dir"
+
+    # Create directory if it doesn't exist
+    if [[ ! -d "$log_dir" ]]; then
+        if ! sudo mkdir -p "$log_dir" 2>/dev/null; then
+            log_error "Failed to create log directory: $log_dir"
+            return 1
+        fi
+    fi
+
+    # Set ownership to actual user so both sudo and non-sudo scripts can write
+    if ! sudo chown -R "$actual_user:$actual_user" "$log_dir" 2>/dev/null; then
+        log_error "Failed to set ownership of log directory"
+        return 1
+    fi
+
+    # Set permissions: user can write, group can write, others can read
+    if ! sudo chmod 755 "$log_dir" 2>/dev/null; then
+        log_error "Failed to set permissions on log directory"
+        return 1
+    fi
+
+    log_success "Log directory ready: $log_dir (owned by $actual_user)"
+    return 0
 }
 
 # Helper function to detect Ubuntu version
@@ -480,8 +510,9 @@ run_selected_installations() {
                 fi
                 ;;
             keyboard)
+                # Keyboard shortcuts don't need sudo - they modify user's GNOME settings
                 if execute_installation_step "Create keyboard shortcuts" \
-                    "${SCRIPT_DIR}/setup/create_keyboard_shortcuts.sh" "true"; then
+                    "${SCRIPT_DIR}/setup/create_keyboard_shortcuts.sh" "false"; then
                     completed_steps=$((completed_steps + 1))
                 else
                     failed_steps=$((failed_steps + 1))
@@ -625,6 +656,12 @@ main() {
                 # Load configuration and export environment variables
                 if ! load_and_export_config; then
                     log_error "Failed to load configuration"
+                    exit 1
+                fi
+
+                # Setup log directory with proper permissions (needed for both sudo and non-sudo scripts)
+                if ! setup_log_directory; then
+                    log_error "Failed to setup log directory"
                     exit 1
                 fi
 
