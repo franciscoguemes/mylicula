@@ -315,9 +315,13 @@ install_standard_packages() {
         done
     else
         log "INFO" "Installing ${#packages[@]} packages with nala..."
-        if nala install -y "${packages[@]}" >> "$LOG_FILE" 2>&1; then
+        log "INFO" ""
+        # Show output to user AND log to file using tee
+        if nala install -y "${packages[@]}" 2>&1 | tee -a "$LOG_FILE"; then
+            echo ""
             log "INFO" "Successfully installed ${#packages[@]} standard packages"
         else
+            echo ""
             log "ERROR" "Failed to install some standard packages (see log for details)"
             log "ERROR" "Log file: ${LOG_FILE}"
             return 1
@@ -344,7 +348,7 @@ add_ppa_repository() {
         return 0
     fi
 
-    if add-apt-repository -y "$ppa" >> "$LOG_FILE" 2>&1; then
+    if add-apt-repository -y "$ppa" 2>&1 | tee -a "$LOG_FILE" >/dev/null; then
         log "INFO" "Successfully added PPA: ${ppa}"
         return 0
     else
@@ -379,7 +383,7 @@ add_custom_repository() {
     fi
 
     # Add repository
-    if echo "$repo_line" | tee -a "$list_file" >> "$LOG_FILE" 2>&1; then
+    if echo "$repo_line" | tee -a "$list_file" 2>&1 | tee -a "$LOG_FILE" >/dev/null; then
         log "INFO" "Successfully added repository to ${list_file}"
         return 0
     else
@@ -477,7 +481,7 @@ install_package_group() {
         # Update package lists after adding repository
         if [[ "$DRY_RUN_MODE" == false ]]; then
             debug "Updating package lists..."
-            if ! nala update >> "$LOG_FILE" 2>&1; then
+            if ! nala update 2>&1 | tee -a "$LOG_FILE" >/dev/null; then
                 log "ERROR" "Failed to update package lists"
                 return 1
             fi
@@ -488,7 +492,7 @@ install_package_group() {
     if [[ "$DRY_RUN_MODE" == true ]]; then
         log "INFO" "[DRY-RUN] Would install: ${packages[*]}"
     else
-        if nala install -y "${packages[@]}" >> "$LOG_FILE" 2>&1; then
+        if nala install -y "${packages[@]}" 2>&1 | tee -a "$LOG_FILE" >/dev/null; then
             log "INFO" "Successfully installed package group: ${packages[*]}"
         else
             log "ERROR" "Failed to install package group: ${packages[*]}"
