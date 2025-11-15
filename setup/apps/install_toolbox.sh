@@ -198,11 +198,66 @@ validate_environment() {
         return 1
     fi
 
-    # Note: Toolbox auto-updates itself, so we don't enforce strict idempotency
-    # If a version exists, we'll still allow installation of newer version
+    # Check idempotency - if Toolbox is already installed
+    log "INFO" "Checking for existing JetBrains Toolbox installation..."
+
     if [[ -d "$INSTALL_DIR" ]] && [[ -n "$(ls -A "$INSTALL_DIR" 2>/dev/null)" ]]; then
-        debug "JetBrains Toolbox directory exists: ${INSTALL_DIR}"
-        debug "Existing installation will be updated to latest version"
+        # Find the most recent installation
+        local existing_dir
+        existing_dir=$(find "$INSTALL_DIR" -maxdepth 1 -type d -name "jetbrains-toolbox-*" 2>/dev/null | sort -V | tail -1)
+
+        if [[ -n "$existing_dir" ]]; then
+            local installed_version
+            installed_version=$(basename "$existing_dir" | grep -oP '\d+\.\d+\.\d+\.\d+' || echo "")
+
+            if [[ -n "$installed_version" ]]; then
+                log "INFO" "Found existing installation: version ${installed_version}"
+                log "INFO" "Checking for latest available version..."
+
+                # We need to fetch the latest version to compare
+                # Create temporary directory for version check
+                local temp_check_dir
+                temp_check_dir=$(mktemp -d -p "${TARGET_HOME}" ".toolbox-version-check-XXXXXX")
+
+                # Fetch latest release to get version
+                local timestamp
+                timestamp=$(($(date +%s%N)/1000000))
+                local api_url="${RELEASE_API_URL}&_=${timestamp}"
+
+                if wget --header="User-Agent: Mozilla/5.0" -q -O "${temp_check_dir}/release.json" "$api_url" 2>/dev/null; then
+                    local latest_url
+                    latest_url=$(jq -r '.TBA[0].downloads.linux.link' "${temp_check_dir}/release.json" 2>/dev/null)
+
+                    if [[ -n "$latest_url" ]] && [[ "$latest_url" != "null" ]]; then
+                        local latest_version
+                        latest_version=$(basename "$latest_url" | grep -oP '\d+\.\d+\.\d+\.\d+' || echo "")
+
+                        if [[ -n "$latest_version" ]]; then
+                            log "INFO" "Latest available version: ${latest_version}"
+
+                            if [[ "$installed_version" == "$latest_version" ]]; then
+                                log "INFO" "JetBrains Toolbox ${installed_version} is already installed and up-to-date"
+                                log "INFO" "✓ Skipping installation"
+                                rm -rf "$temp_check_dir" 2>/dev/null
+                                return 2  # Already installed
+                            else
+                                log "INFO" "Upgrade available: ${installed_version} → ${latest_version}"
+                                log "INFO" "Will proceed with upgrade"
+                            fi
+                        fi
+                    fi
+                fi
+
+                # Cleanup temp directory
+                rm -rf "$temp_check_dir" 2>/dev/null
+            else
+                log "INFO" "Existing installation found but version could not be determined"
+                log "INFO" "Will proceed with installation"
+            fi
+        fi
+    else
+        log "INFO" "No existing installation found"
+        log "INFO" "Will proceed with fresh installation"
     fi
 
     log "INFO" "✓ Environment validation passed"
