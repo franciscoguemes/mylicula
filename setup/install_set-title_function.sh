@@ -282,8 +282,8 @@ main() {
         esac
     done
 
-    # Setup logging
-    setup_installer_common
+    # Setup logging (no-root: modifies user's bash configuration)
+    setup_installer_common "no-root"
 
     # Execute the installer using the standard interface
     execute_installer

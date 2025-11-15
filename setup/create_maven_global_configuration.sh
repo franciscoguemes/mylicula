@@ -375,8 +375,8 @@ main() {
         esac
     done
 
-    # Setup logging
-    setup_installer_common
+    # Setup logging (no-root: creates files in user's .m2 directory)
+    setup_installer_common "no-root"
 
     # Execute the installer using the standard interface
     execute_installer

@@ -387,8 +387,8 @@ main() {
         esac
     done
 
-    # Setup logging
-    setup_installer_common
+    # Setup logging (no-root: cloning repos to user's home directory)
+    setup_installer_common "no-root"
 
     # Execute the installer using the standard interface
     execute_installer
