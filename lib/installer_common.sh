@@ -414,16 +414,21 @@ execute_installer() {
 
     # Validate environment
     log "INFO" "Step 1/2: Validating environment..."
-    if ! validate_environment; then
-        validation_result=$?
-        if [[ $validation_result -eq 2 ]]; then
-            log "INFO" "✓ Already installed (skipping)"
-            return 0
-        else
-            log "ERROR" "✗ Validation failed"
-            return 1
-        fi
+
+    # Temporarily disable errexit to capture return code
+    set +e
+    validate_environment
+    validation_result=$?
+    set -e
+
+    if [[ $validation_result -eq 2 ]]; then
+        log "INFO" "✓ Already installed (skipping)"
+        return 0
+    elif [[ $validation_result -ne 0 ]]; then
+        log "ERROR" "✗ Validation failed"
+        return 1
     fi
+
     log "INFO" "✓ Validation passed"
 
     # Run installation
