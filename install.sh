@@ -121,7 +121,7 @@ check_sudo_required() {
     # Check if any of the selected steps require sudo
     for item in $selections; do
         case "$item" in
-            packages|snap|directory|bash_scripts)
+            packages|snap|directory|bash_scripts|flyway)
                 return 0  # Requires sudo
                 ;;
         esac
@@ -580,8 +580,9 @@ run_selected_installations() {
                 fi
                 ;;
             flyway)
+                # Flyway installs to /opt/ and /usr/local/bin/ (requires sudo)
                 if execute_installation_step "3rd party apps: Flyway" \
-                    "${SCRIPT_DIR}/setup/apps/install_flyway.sh"; then
+                    "${SCRIPT_DIR}/setup/apps/install_flyway.sh" "true"; then
                     completed_steps=$((completed_steps + 1))
                 else
                     failed_steps=$((failed_steps + 1))
