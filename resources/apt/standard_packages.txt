@@ -16,7 +16,7 @@ gedit-plugins
 gnome-screensaver
 
 # A nautilus extension to customize Nautilus through Python scripts
-python-nautilus
+python3-nautilus
 
 # To create GTK dialogue boxes from the terminal/scripts
 zenity
@@ -29,7 +29,7 @@ zenity
 python3-pip
 
 # Package to create virtual environments in Python3
-python3.8-venv
+python3-venv
 
 # tkinter package for Python
 python3-tk
@@ -61,15 +61,15 @@ xdotool
 curl
 wget
 nmap
-speedtest
+speedtest-cli
 
 
 #****************************************************************************************************
 # Processors and Pre-Processors
 #****************************************************************************************************
 jq
+# libxml2-utils includes xmllint command
 libxml2-utils
-xmllint
 xmlstarlet
 
 
@@ -78,7 +78,8 @@ xmlstarlet
 #****************************************************************************************************
 unrar
 p7zip-full
-pdfunite
+# poppler-utils includes pdfunite command
+poppler-utils
 hashalot
 
 
@@ -119,7 +120,7 @@ keepassxc
 #****************************************************************************************************
 # Development Applications
 #****************************************************************************************************
-pencil
+# pencil - Not available in default Ubuntu repos (use Snap or custom PPA)
 filezilla
 virtualbox
 
@@ -142,7 +143,7 @@ gnome-shell-pomodoro
 #****************************************************************************************************
 # PDF Editors
 #****************************************************************************************************
-master-pdf-editor
+# master-pdf-editor - Not available in default Ubuntu repos (requires custom PPA or download)
 
 
 #****************************************************************************************************
@@ -182,7 +183,7 @@ gnome-shell-extension-manager
 gnome-shell-extension-prefs
 
 # https://gitlab.gnome.org/GNOME/gnome-tweaks
-gnome-tweak-tool
+gnome-tweaks
 
 # https://chrome.google.com/webstore/detail/gnome-shell-integration/gphhapmejobijbbhgpjhcjognlahblep?hl=en
 chrome-gnome-shell
