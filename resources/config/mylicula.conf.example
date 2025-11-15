@@ -56,6 +56,11 @@ CONFIG[BASE_DIR]="/path/to/mylicula"
 # Generate at: https://github.com/settings/tokens
 # CONFIG[GITHUB_PAT]="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
 
+# GitLab Personal Access Token (for API access, private repos)
+# Generate at: https://gitlab.com/-/user_settings/personal_access_tokens?page=1&state=active&sort=expires_asc
+# CONFIG[GITLAB_PAT]="glpat-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+
+
 # =============================================================================
 # Installation Options
 # =============================================================================
