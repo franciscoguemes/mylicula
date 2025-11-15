@@ -182,21 +182,43 @@ validate_environment() {
     fi
 
     # Check idempotency - if Flyway is installed and is latest version (unless --force)
-    if [[ "$FORCE_INSTALL" == false ]] && check_flyway_installed; then
+    log "INFO" "Checking for existing Flyway installation..."
+    debug "FORCE_INSTALL: ${FORCE_INSTALL}"
+
+    if check_flyway_installed; then
+        log "INFO" "Flyway installation found at: ${FLYWAY_INSTALL_DIR}"
         local installed_version
         local latest_version
 
         installed_version=$(get_installed_version)
-        latest_version=$(get_latest_version)
+        log "INFO" "Installed version: ${installed_version:-<version detection failed>}"
 
-        if [[ -n "$installed_version" ]] && [[ -n "$latest_version" ]]; then
-            if [[ "$installed_version" == "$latest_version" ]]; then
-                log "INFO" "Flyway ${installed_version} is already installed (latest version)"
-                return 2  # Already installed
+        log "INFO" "Checking for latest available version..."
+        latest_version=$(get_latest_version)
+        log "INFO" "Latest version: ${latest_version:-<version check failed>}"
+
+        if [[ "$FORCE_INSTALL" == false ]]; then
+            if [[ -n "$installed_version" ]] && [[ -n "$latest_version" ]]; then
+                if [[ "$installed_version" == "$latest_version" ]]; then
+                    log "INFO" "Flyway ${installed_version} is already installed and up-to-date"
+                    log "INFO" "✓ Skipping installation (use --force to reinstall)"
+                    return 2  # Already installed
+                else
+                    log "INFO" "Upgrade available: ${installed_version} → ${latest_version}"
+                    log "INFO" "Will proceed with upgrade"
+                fi
             else
-                log "INFO" "Flyway ${installed_version} is installed, but ${latest_version} is available"
+                log "WARN" "Flyway installation found but version detection failed"
+                log "WARN" "Installed: ${installed_version:-<not detected>}"
+                log "WARN" "Latest: ${latest_version:-<not detected>}"
+                log "INFO" "Proceeding with installation anyway"
             fi
+        else
+            log "INFO" "Force install requested - will reinstall Flyway ${latest_version}"
         fi
+    else
+        log "INFO" "No existing Flyway installation found"
+        log "INFO" "Will proceed with fresh installation"
     fi
 
     log "INFO" "✓ Environment validation passed"
@@ -265,6 +287,7 @@ cleanup_on_failure() {
     if [[ "$DRY_RUN_MODE" == true ]]; then
         log "INFO" "[DRY-RUN] Would remove: ${FLYWAY_INSTALL_DIR}"
         log "INFO" "[DRY-RUN] Would remove: ${FLYWAY_BIN}"
+        log "INFO" "[DRY-RUN] Would remove temporary download files"
     else
         # Remove installation directory if it exists
         if [[ -d "$FLYWAY_INSTALL_DIR" ]]; then
@@ -277,6 +300,10 @@ cleanup_on_failure() {
             debug "Removing broken symlink: ${FLYWAY_BIN}"
             rm -f "$FLYWAY_BIN" 2>/dev/null || true
         fi
+
+        # Remove any temporary download files
+        debug "Removing temporary download files"
+        rm -f /tmp/flyway-*.tar.gz 2>/dev/null || true
 
         log "INFO" "Cleanup completed"
     fi
@@ -294,7 +321,11 @@ cleanup_on_failure() {
 # Return: 0 if installed, 1 if not
 #
 check_flyway_installed() {
-    if command -v flyway &>/dev/null; then
+    # Check if Flyway installation directory and binary exist
+    if [[ -d "$FLYWAY_INSTALL_DIR" ]] && [[ -x "${FLYWAY_INSTALL_DIR}/flyway" ]]; then
+        return 0
+    elif [[ -L "$FLYWAY_BIN" ]] && [[ -x "$FLYWAY_BIN" ]]; then
+        # Also check if symlink exists and is executable
         return 0
     else
         return 1
@@ -308,7 +339,9 @@ check_flyway_installed() {
 #
 get_installed_version() {
     if check_flyway_installed; then
-        flyway -v 2>/dev/null | awk 'FNR == 1' | awk '{print $4}'
+        # Use direct path to avoid PATH issues when running as root
+        # Use grep to find the version line (handles WARNING messages)
+        "${FLYWAY_INSTALL_DIR}/flyway" -v 2>&1 | grep "Flyway Community Edition" | awk '{print $4}'
     else
         echo ""
     fi
@@ -366,13 +399,28 @@ install_flyway_version() {
     rm -rf "${FLYWAY_INSTALL_DIR:?}"/* 2>/dev/null || true
 
     # Download and extract Flyway
-    log "INFO" "Downloading Flyway ${version}..."
+    log "INFO" "Downloading Flyway ${version}... (this may take a few minutes)"
     debug "Download URL: ${download_url}"
 
-    if ! wget -qO- "$download_url" | tar -xz -C "$FLYWAY_INSTALL_DIR" --strip-components=1; then
-        log "ERROR" "Failed to download and extract Flyway"
+    # Use wget with progress bar (--progress=bar:force shows progress even when piping)
+    # Download to temp file first, then extract (allows progress display)
+    local temp_file="/tmp/flyway-${version}.tar.gz"
+
+    if ! wget --progress=bar:force -O "$temp_file" "$download_url" 2>&1 | tee -a "$LOG_FILE"; then
+        log "ERROR" "Failed to download Flyway"
+        rm -f "$temp_file" 2>/dev/null
         return 1
     fi
+
+    log "INFO" "Extracting Flyway..."
+    if ! tar -xzf "$temp_file" -C "$FLYWAY_INSTALL_DIR" --strip-components=1 2>&1 | tee -a "$LOG_FILE"; then
+        log "ERROR" "Failed to extract Flyway"
+        rm -f "$temp_file" 2>/dev/null
+        return 1
+    fi
+
+    # Clean up temp file
+    rm -f "$temp_file" 2>/dev/null
 
     # Set execute permissions
     debug "Setting execute permissions on flyway binary"
