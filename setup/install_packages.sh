@@ -376,9 +376,22 @@ add_custom_repository() {
         return 0
     fi
 
-    # Check if repository already exists
-    if grep -qF "$repo_line" "$list_file" 2>/dev/null; then
-        debug "Repository already exists in ${list_file}"
+    # Extract the repository URL from the line
+    # Format: deb [options] URL suite components
+    local repo_url
+    if [[ "$repo_line" =~ https?://[^[:space:]]+ ]]; then
+        repo_url="${BASH_REMATCH[0]}"
+    else
+        log "ERROR" "Could not extract URL from repository line: ${repo_line}"
+        return 1
+    fi
+
+    debug "Extracted repository URL: ${repo_url}"
+
+    # Check if this repository URL is already configured system-wide
+    if grep -rh "^deb.*${repo_url}" /etc/apt/sources.list /etc/apt/sources.list.d/ 2>/dev/null | grep -v "^#" | grep -q .; then
+        log "INFO" "Repository already configured for URL: ${repo_url}"
+        debug "Skipping duplicate repository addition"
         return 0
     fi
 
