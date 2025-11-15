@@ -202,13 +202,25 @@ validate_environment() {
 
     # Check if PAT token is provided (either via parameter or environment variable)
     if [[ -z "$PAT_TOKEN" ]]; then
-        log "ERROR" "GitLab Personal Access Token (PAT) is required"
+        log "ERROR" "GitLab Personal Access Token (PAT) is required but not found"
         log "ERROR" ""
-        log "ERROR" "Provide the token in one of two ways:"
-        log "ERROR" "  1. Command-line parameter: -p <token>"
-        log "ERROR" "  2. Environment variable: export MYLICULA_GITLAB_PAT=<token>"
+
+        # Check if environment variable is set but empty
+        if [[ -v MYLICULA_GITLAB_PAT ]]; then
+            log "ERROR" "MYLICULA_GITLAB_PAT is set but empty"
+            log "ERROR" "Please set a valid token in: ${CONFIG_FILE:-~/.config/mylicula/mylicula.conf}"
+        else
+            log "ERROR" "MYLICULA_GITLAB_PAT environment variable is not set"
+            log "ERROR" "This should be loaded from: ${CONFIG_FILE:-~/.config/mylicula/mylicula.conf}"
+        fi
+
+        log "ERROR" ""
+        log "ERROR" "You can also provide the token via command-line:"
+        log "ERROR" "  $(basename "$0") -p <your-gitlab-token>"
         return 1
     fi
+
+    debug "GitLab PAT token found (length: ${#PAT_TOKEN} characters)"
 
     # Validate token format (basic check - should start with glpat- or glptt-)
     if [[ ! "$PAT_TOKEN" =~ ^(glpat-|glptt-) ]]; then
