@@ -446,7 +446,20 @@ execute_installation_step() {
             return 1
         fi
     else
-        if bash "$script_path"; then
+        # Pass all MYLICULA_* environment variables (even without sudo)
+        # This ensures configuration is available to non-sudo scripts
+        if MYLICULA_BASE_DIR="$MYLICULA_BASE_DIR" \
+            MYLICULA_USERNAME="$MYLICULA_USERNAME" \
+            MYLICULA_EMAIL="$MYLICULA_EMAIL" \
+            MYLICULA_USERNAME_FULL_NAME="$MYLICULA_USERNAME_FULL_NAME" \
+            MYLICULA_COMPANY="$MYLICULA_COMPANY" \
+            MYLICULA_GITHUB_USER="$MYLICULA_GITHUB_USER" \
+            MYLICULA_HOME="$MYLICULA_HOME" \
+            MYLICULA_UBUNTU_VERSION="$MYLICULA_UBUNTU_VERSION" \
+            MYLICULA_IS_UBUNTU="$MYLICULA_IS_UBUNTU" \
+            MYLICULA_GITHUB_PAT="$MYLICULA_GITHUB_PAT" \
+            MYLICULA_GITLAB_PAT="$MYLICULA_GITLAB_PAT" \
+            bash "$script_path"; then
             log_success "Completed: $step_name"
             return 0
         else
