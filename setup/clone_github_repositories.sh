@@ -193,13 +193,25 @@ validate_environment() {
 
     # Check if GitHub token is provided (either via parameter or environment variable)
     if [[ -z "$GITHUB_TOKEN" ]]; then
-        log "ERROR" "GitHub Personal Access Token (PAT) is required"
+        log "ERROR" "GitHub Personal Access Token (PAT) is required but not found"
         log "ERROR" ""
-        log "ERROR" "Provide the token in one of two ways:"
-        log "ERROR" "  1. Command-line parameter: -p <token>"
-        log "ERROR" "  2. Environment variable: export MYLICULA_GITHUB_PAT=<token>"
+
+        # Check if environment variable is set but empty
+        if [[ -v MYLICULA_GITHUB_PAT ]]; then
+            log "ERROR" "MYLICULA_GITHUB_PAT is set but empty"
+            log "ERROR" "Please set a valid token in: ${CONFIG_FILE:-~/.config/mylicula/mylicula.conf}"
+        else
+            log "ERROR" "MYLICULA_GITHUB_PAT environment variable is not set"
+            log "ERROR" "This should be loaded from: ${CONFIG_FILE:-~/.config/mylicula/mylicula.conf}"
+        fi
+
+        log "ERROR" ""
+        log "ERROR" "You can also provide the token via command-line:"
+        log "ERROR" "  $(basename "$0") -p <your-github-token>"
         return 1
     fi
+
+    debug "GitHub PAT token found (length: ${#GITHUB_TOKEN} characters)"
 
     # Validate token format (basic check - should start with ghp_, gho_, or ghs_)
     if [[ ! "$GITHUB_TOKEN" =~ ^(ghp_|gho_|ghs_|github_pat_) ]]; then
