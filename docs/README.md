@@ -21,13 +21,42 @@ After enabling GitHub Pages, your website will be available at:
 
 **Note:** It may take a few minutes for the site to be published after the first setup.
 
-### 3. Custom Domain (Optional)
+### 3. Custom Domain / Subdomain (Optional)
 
-If you want to use a custom domain:
+Yes! You can use a subdomain like `mylicula.example.com` even if `example.com` points to another website.
 
+**Step 1: Create CNAME file**
 1. Create a file named `CNAME` in the `docs/` directory
-2. Add your domain name (e.g., `mylicula.example.com`)
-3. Configure DNS records as instructed by GitHub Pages
+2. Add your subdomain name (e.g., `mylicula.example.com`)
+   - **Important:** Only include the subdomain, no `http://` or `https://`
+   - **Note:** I've created a template file - edit it with your actual subdomain
+
+**Step 2: Configure DNS Records**
+Add a CNAME record in your DNS provider's settings:
+
+```
+Type: CNAME
+Name: mylicula        (or just the subdomain part)
+Value: franciscoguemes.github.io
+TTL: 3600 (or your provider's default)
+```
+
+**Step 3: Enable in GitHub**
+1. Go to repository Settings > Pages
+2. Under "Custom domain", enter your subdomain: `mylicula.example.com`
+3. Check "Enforce HTTPS" (recommended)
+4. Click Save
+
+**Step 4: Wait for DNS Propagation**
+- DNS changes can take 24-48 hours to propagate globally
+- GitHub will verify the DNS and enable HTTPS automatically
+- You can check DNS propagation with: `dig mylicula.example.com CNAME`
+
+**Important Notes:**
+- The CNAME file must contain ONLY the subdomain name (no trailing slash, no protocol)
+- You can have multiple subdomains pointing to different GitHub Pages sites
+- Your main domain (`example.com`) can continue pointing to your personal website
+- GitHub Pages supports both apex domains (`example.com`) and subdomains (`mylicula.example.com`)
 
 ## File Structure
 
@@ -35,7 +64,9 @@ If you want to use a custom domain:
 docs/
 ├── index.html      # Main website page
 ├── styles.css      # Stylesheet
+├── CNAME           # Custom domain/subdomain configuration
 ├── README.md       # This file
+├── test_website.sh # Local test server script
 └── favicon.ico     # Website icon (optional)
 ```
 
