@@ -70,6 +70,9 @@ BASH_DIR="$BASE_DIR/scripts/bash"
 # Destination directory for symlinks
 BIN_DIR="/usr/local/bin"
 
+# Get the actual user (not root when running with sudo)
+ACTUAL_USER="${MYLICULA_USERNAME:-${SUDO_USER:-${USER}}}"
+
 # Global error counter for idempotency
 error_count=0
 
@@ -144,6 +147,15 @@ validate_environment() {
         log "ERROR" "Please run with: sudo $(basename "$0")"
         return 1
     fi
+
+    # Validate ACTUAL_USER is set
+    if [[ -z "$ACTUAL_USER" ]] || [[ "$ACTUAL_USER" == "root" ]]; then
+        log "ERROR" "Cannot determine actual user (MYLICULA_USERNAME not set and not running via sudo)"
+        log "ERROR" "Please run via install.sh or set MYLICULA_USERNAME environment variable"
+        return 1
+    fi
+
+    debug "Actual user: $ACTUAL_USER"
 
     # Check if source directory exists
     if [[ ! -d "$BASH_DIR" ]]; then
@@ -251,6 +263,7 @@ process_files() {
 
             if [[ "$DRY_RUN_MODE" == true ]]; then
                 log "INFO" "[DRY-RUN] Would create symlink: $link_path -> $file"
+                log "INFO" "[DRY-RUN] Would change ownership to: $ACTUAL_USER"
             else
                 # create_symlink returns 0 for success, 1 for error, 2 for skip
                 # We don't treat "already exists" (return 2) as an error for idempotency
@@ -264,6 +277,15 @@ process_files() {
                 if [[ $symlink_result -eq 1 ]]; then
                     # Return code 1 indicates an error
                     ((error_count++)) || true
+                elif [[ $symlink_result -eq 0 ]] || [[ $symlink_result -eq 2 ]]; then
+                    # Symlink created or already exists - change ownership to actual user
+                    # Use -h to change the symlink itself, not the target
+                    if ! chown -h "$ACTUAL_USER:$ACTUAL_USER" "$link_path" 2>/dev/null; then
+                        log "ERROR" "Failed to change ownership of $filename to $ACTUAL_USER"
+                        ((error_count++)) || true
+                    else
+                        debug "Changed ownership of $filename to $ACTUAL_USER"
+                    fi
                 fi
             fi
 
@@ -310,6 +332,7 @@ install_traverse_script() {
 
     if [[ "$DRY_RUN_MODE" == true ]]; then
         log "INFO" "[DRY-RUN] Would create symlink: $link_path -> $traverse_script"
+        log "INFO" "[DRY-RUN] Would change ownership to: $ACTUAL_USER"
     else
         # Capture return code without triggering set -e
         local symlink_result=0
@@ -323,6 +346,15 @@ install_traverse_script() {
             # Return code 1 indicates an error
             ((error_count++)) || true
             return 1
+        elif [[ $symlink_result -eq 0 ]] || [[ $symlink_result -eq 2 ]]; then
+            # Symlink created or already exists - change ownership to actual user
+            if ! chown -h "$ACTUAL_USER:$ACTUAL_USER" "$link_path" 2>/dev/null; then
+                log "ERROR" "Failed to change ownership of traverse.sh to $ACTUAL_USER"
+                ((error_count++)) || true
+                return 1
+            else
+                debug "Changed ownership of traverse.sh to $ACTUAL_USER"
+            fi
         fi
     fi
 
