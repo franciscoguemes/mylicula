@@ -469,6 +469,62 @@ execute_installation_step() {
     fi
 }
 
+create_desktop_readmes() {
+    local selections="$1"
+    local readme_dir="${HOME}/Desktop/README MyLiCuLa"
+    local readmes_source="${SCRIPT_DIR}/resources/readmes"
+
+    # Check if any README files exist for installed components
+    local has_readmes=false
+    for item in $selections; do
+        if [[ -f "${readmes_source}/README_${item}.md" ]]; then
+            has_readmes=true
+            break
+        fi
+    done
+
+    # Also check for main README
+    if [[ -f "${readmes_source}/README_main.md" ]]; then
+        has_readmes=true
+    fi
+
+    if [[ "$has_readmes" == "false" ]]; then
+        debug "No README files found for installed components"
+        return 0
+    fi
+
+    log_info "Creating desktop README directory..."
+
+    # Create README directory on desktop
+    if ! mkdir -p "$readme_dir" 2>/dev/null; then
+        log_error "Failed to create README directory: $readme_dir"
+        return 1
+    fi
+
+    # Copy main README (always, if exists)
+    if [[ -f "${readmes_source}/README_main.md" ]]; then
+        cp "${readmes_source}/README_main.md" "${readme_dir}/"
+        log_info "  ✓ Main README"
+    fi
+
+    # Copy component-specific READMEs
+    local copied_count=0
+    for item in $selections; do
+        local readme_file="${readmes_source}/README_${item}.md"
+        if [[ -f "$readme_file" ]]; then
+            cp "$readme_file" "${readme_dir}/"
+            log_info "  ✓ README for: $item"
+            copied_count=$((copied_count + 1))
+        fi
+    done
+
+    if [[ $copied_count -gt 0 ]] || [[ -f "${readmes_source}/README_main.md" ]]; then
+        log_success "README files created at: $readme_dir"
+    fi
+
+    return 0
+}
+
 run_selected_installations() {
     local selections="$1"
 
@@ -681,6 +737,9 @@ main() {
 
                 # Execute selected installations
                 run_selected_installations "$selections"
+
+                # Create desktop README files for installed components
+                create_desktop_readmes "$selections"
 
                 # Show completion message
                 whiptail --title "MyLiCuLa - Installation Complete" \
