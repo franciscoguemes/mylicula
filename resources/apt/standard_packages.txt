@@ -21,6 +21,10 @@ python3-nautilus
 # To create GTK dialogue boxes from the terminal/scripts
 zenity
 
+# Desktop notification utility (notify-send command)
+# Used by scripts for user notifications
+libnotify-bin
+
 
 #****************************************************************************************************
 # Python3 Related Packages
