@@ -7,13 +7,31 @@
     <title>MyLiCuLa - My Linux Customization Layer</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <script>
+        // Set theme immediately to prevent flash of light mode
+        (function() {
+            const theme = localStorage.getItem('theme') || 'dark';
+            document.documentElement.setAttribute('data-theme', theme);
+        })();
+    </script>
 </head>
 <body>
     <header>
         <div class="container">
-            <h1>MyLiCuLa</h1>
-            <p class="subtitle">My Linux Customization Layer</p>
-            <p class="tagline">Install once, replicate everywhere</p>
+            <div class="header-content">
+                <div class="header-text">
+                    <h1>MyLiCuLa</h1>
+                    <p class="subtitle">My Linux Customization Layer</p>
+                    <p class="tagline">Install once, replicate everywhere</p>
+                </div>
+                <div class="dark-mode-toggle-container">
+                    <label for="dark-mode-toggle" class="dark-mode-toggle-label" title="Toggle dark mode">
+                        <span class="toggle-icon" id="toggle-icon">🌙</span>
+                        <input type="checkbox" id="dark-mode-toggle" class="dark-mode-toggle" aria-label="Toggle dark mode">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
         </div>
     </header>
 
@@ -222,6 +240,42 @@ cd mylicula
     </footer>
 
     <script>
+        // Dark Mode Functionality
+        (function() {
+            const darkModeToggle = document.getElementById('dark-mode-toggle');
+            const toggleIcon = document.getElementById('toggle-icon');
+            const theme = localStorage.getItem('theme') || 'dark'; // Default to dark
+            
+            // Update icon based on theme
+            function updateIcon(isDark) {
+                toggleIcon.textContent = isDark ? '🌙' : '☀️';
+            }
+            
+            // Apply theme on page load
+            if (theme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                darkModeToggle.checked = true;
+                updateIcon(true);
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+                darkModeToggle.checked = false;
+                updateIcon(false);
+            }
+            
+            // Handle toggle
+            darkModeToggle.addEventListener('change', function() {
+                if (this.checked) {
+                    document.documentElement.setAttribute('data-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
+                    updateIcon(true);
+                } else {
+                    document.documentElement.setAttribute('data-theme', 'light');
+                    localStorage.setItem('theme', 'light');
+                    updateIcon(false);
+                }
+            });
+        })();
+
         function copyToClipboard(button) {
             const code = button.getAttribute('data-code');
             navigator.clipboard.writeText(code).then(() => {
