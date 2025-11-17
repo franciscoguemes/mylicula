@@ -13,6 +13,7 @@ MyLiCuLa is a customization layer for Ubuntu Linux that automates system setup t
 ├── resources/          - Configuration files, templates, and data
 │   ├── apt/           - Package lists
 │   ├── icons/         - Custom icons
+│   ├── readmes/       - Post-installation documentation (14 README files)
 │   ├── snap/          - Snap package lists
 │   └── templates/     - File templates
 ├── scripts/            - Helper and utility scripts
@@ -42,6 +43,85 @@ Follow project conventions when creating scripts:
 - Global variable naming conventions
 - Consistent code style and structure
 - Interpolation format: `<<<KEY_TO_INTERPOLATE>>>` for values to be replaced during installation
+
+## Post-Installation Documentation (IMPORTANT)
+
+**When creating or updating installation scripts in `setup/`, you MUST also maintain the corresponding README file in `resources/readmes/`.**
+
+### README File Naming Convention
+
+For each installation script, there must be a matching README file:
+
+| Installation Script | README File | Component Name |
+|-------------------|-------------|----------------|
+| `setup/install_packages.sh` | `resources/readmes/README_packages.md` | `packages` |
+| `setup/install_snap.sh` | `resources/readmes/README_snap.md` | `snap` |
+| `setup/install_bash_scripts.sh` | `resources/readmes/README_bash_scripts.md` | `bash_scripts` |
+| `setup/create_keyboard_shortcuts.sh` | `resources/readmes/README_keyboard.md` | `keyboard` |
+| `setup/clone_gitlab_repositories.sh` | `resources/readmes/README_gitlab.md` | `gitlab` |
+| `setup/clone_github_repositories.sh` | `resources/readmes/README_github.md` | `github` |
+| `setup/install_icons.sh` | `resources/readmes/README_icons.md` | `icons` |
+| `setup/install_templates.sh` | `resources/readmes/README_templates.md` | `templates` |
+| `setup/install_set-title_function.sh` | `resources/readmes/README_set_title.md` | `set_title` |
+| `setup/create_maven_global_configuration.sh` | `resources/readmes/README_maven.md` | `maven` |
+| `setup/create_directory_structure.sh` | `resources/readmes/README_directory.md` | `directory` |
+| `setup/apps/install_flyway.sh` | `resources/readmes/README_flyway.md` | `flyway` |
+| `setup/apps/install_toolbox.sh` | `resources/readmes/README_toolbox.md` | `toolbox` |
+
+### README File Format
+
+Each README file MUST include:
+
+```markdown
+# Component Name
+
+Brief description of what was installed.
+
+## 📍 Installation Location
+- **Primary Location**: /path/to/installation
+- **Configuration**: /path/to/config
+- **Log File**: /var/log/mylicula/<script-name>.log
+
+## 🚀 Usage
+Basic usage examples and commands
+
+## 🔧 Configuration
+How to configure or customize the component
+
+## 🔄 Re-running / Updating
+How to update or reinstall using MyLiCuLa installer
+
+## 💡 Important Notes
+- Key information users should know
+- Idempotency notes
+- System requirements
+
+## 🆘 Troubleshooting
+Common issues and solutions
+
+---
+For more help, see: [official documentation link]
+```
+
+### When to Update README Files
+
+**You MUST update the corresponding README file when:**
+1. Creating a new installation script in `setup/`
+2. Changing installation locations or paths
+3. Modifying configuration file locations
+4. Adding new features or options
+5. Changing usage instructions or commands
+6. Updating system requirements
+
+### Desktop README Feature
+
+After installation completes, `install.sh` automatically:
+1. Creates `~/Desktop/README MyLiCuLa/` directory
+2. Copies `README_main.md` (always)
+3. Copies component-specific READMEs for installed components only
+4. Shows user where documentation was created
+
+This ensures users have immediate access to documentation for what was just installed on their system.
 
 ## Installation Process
 - Root script: `install.sh` - Interactive installation asking configuration questions

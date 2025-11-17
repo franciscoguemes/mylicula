@@ -95,6 +95,14 @@ mylicula/
 │   ├── config/            # Configuration templates
 │   │   └── mylicula.conf.example  # Configuration blueprint
 │   ├── icons/             # Custom icons
+│   ├── readmes/           # Post-installation documentation (14 files)
+│   │   ├── README_main.md           # Overview
+│   │   ├── README_packages.md       # Package management
+│   │   ├── README_bash_scripts.md   # Installed scripts
+│   │   ├── README_keyboard.md       # Keyboard shortcuts
+│   │   ├── README_flyway.md         # Flyway usage
+│   │   ├── README_toolbox.md        # JetBrains Toolbox
+│   │   └── ... (one for each component)
 │   ├── snap/              # Snap package lists
 │   │   └── list_of_snap.txt       # Snap packages with FLAGS
 │   └── templates/         # File templates
@@ -133,6 +141,7 @@ mylicula/
 - `apt/` - Package lists for apt installation
 - `config/` - Configuration templates and examples
 - `icons/` - Custom directory icons
+- `readmes/` - Post-installation README files for desktop
 - `snap/` - Snap package lists
 - `templates/` - File templates for Nautilus
 
@@ -204,12 +213,45 @@ When you run `./install.sh`, it:
 1. **Checks Requirements** - Verifies Bash 4.0+, Linux OS, Ubuntu version
 2. **Collects Configuration** - Asks for your info or loads from `~/.config/mylicula/mylicula.conf`
 3. **Saves Configuration** - Stores settings for future runs
-4. **Runs Generic Linux Customizations** - Executes all `customize/linux/*.sh` scripts
-5. **Runs Ubuntu Customizations** - Executes all `customize/ubuntu/*.sh` scripts
+4. **Shows Installation Menu** - Select which components to install
+5. **Runs Selected Installations** - Executes chosen setup scripts
    - Package installation (apt and snap)
-   - Template and icon installation
-   - Custom shell functions
-6. **Reports Results** - Shows what succeeded/failed
+   - Application installation (Flyway, Toolbox)
+   - Repository cloning (GitHub, GitLab)
+   - UI customization (icons, templates, keyboard shortcuts)
+   - Directory structure creation
+   - Custom scripts and functions
+6. **Creates Desktop READMEs** - Copies documentation to desktop (see below)
+7. **Reports Results** - Shows what succeeded/failed
+
+### Post-Installation Documentation
+
+After installation completes, MyLiCuLa automatically creates a `README MyLiCuLa` folder on your desktop with comprehensive documentation for each installed component.
+
+**Desktop README Location:**
+```
+~/Desktop/README MyLiCuLa/
+├── README_main.md           # Overview and quick reference
+├── README_flyway.md         # Flyway usage and configuration
+├── README_toolbox.md        # JetBrains Toolbox guide
+├── README_bash_scripts.md   # Installed scripts reference
+├── README_keyboard.md       # Keyboard shortcuts list
+└── ... (only for installed components)
+```
+
+**README Files Include:**
+- 📍 Installation locations and paths
+- 🚀 Usage instructions and common commands
+- 🔧 Configuration details and customization options
+- 🔄 How to update or reinstall components
+- 🆘 Troubleshooting tips and common issues
+- 📖 Links to official documentation
+
+**Source Files:**
+README templates are stored in `resources/readmes/` and are automatically copied to the desktop for installed components only.
+
+**Cleanup:**
+The desktop README directory can be safely deleted after reviewing. The information is available anytime by re-running the installer or checking the source files in `resources/readmes/`.
 
 ### Installation Options
 
