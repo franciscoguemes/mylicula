@@ -2,6 +2,9 @@
 
 JetBrains Toolbox has been installed to manage your JetBrains IDEs (IntelliJ IDEA, PyCharm, WebStorm, etc.).
 
+__NOTE:__ Using Toolbox is the recommended way of installing any JetBrains IDE. You should refer to this tool to 
+install and update your JetBrains IDEs in your system.
+
 ## 📍 Installation Location
 
 - **Installation Directory**: `~/development/jetbrains-toolbox/jetbrains-toolbox-<version>/`
