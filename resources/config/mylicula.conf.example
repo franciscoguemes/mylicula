@@ -10,6 +10,11 @@
 #
 # IMPORTANT: The actual config file may contain secrets (GitHub tokens, API keys, etc.)
 #            and should NEVER be committed to version control.
+#
+# USAGE: This configuration file is used by:
+#   - install.sh (during installation to configure the system)
+#   - Installed bash scripts (scripts/bash/*) that need user configuration
+#   - Example scripts: insert_signature_in_clipboard.sh reads USERNAME_FULL_NAME
 
 # =============================================================================
 # User Information
@@ -25,6 +30,7 @@ CONFIG[EMAIL]="your.email@example.com"
 
 # Your full name (used in script headers, documentation, and notifications)
 # Note: This is YOUR full name, not your git/github username
+# Used by: install.sh, insert_signature_in_clipboard.sh, and other scripts
 CONFIG[USERNAME_FULL_NAME]="Your Full Name"
 
 # Company or organization you're currently working at

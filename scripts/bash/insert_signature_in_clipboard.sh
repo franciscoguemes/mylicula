@@ -5,9 +5,9 @@
 #                   --dry-run       Run without making any changes
 #                   -h, --help      Display help message
 #
-#Usage          : ./insert_name_in_clipboard.sh
-#                 ./insert_name_in_clipboard.sh --debug
-#                 ./insert_name_in_clipboard.sh --dry-run
+#Usage          : ./insert_signature_in_clipboard.sh
+#                 ./insert_signature_in_clipboard.sh --debug
+#                 ./insert_signature_in_clipboard.sh --dry-run
 #
 #Output stdout  : Success message confirming text copied to clipboard
 #Output stderr  : Error messages if clipboard operation fails
@@ -18,7 +18,11 @@
 #                 The signature includes:
 #                   Kind regards,
 #
-#                   Francisco Güemes
+#                   [Your Full Name from config]
+#
+#                 The full name is read from ~/.config/mylicula/mylicula.conf
+#                 (USERNAME_FULL_NAME property). If the config file doesn't exist,
+#                 it falls back to the git user.name or system username.
 #
 #                 This script requires xclip to be installed for clipboard access.
 #                 If xclip is not installed, the script will fail with instructions
@@ -53,10 +57,14 @@ LOG_FILE="${LOG_DIR}/${SCRIPT_NAME%.sh}.log"
 DEBUG_MODE=false
 DRY_RUN_MODE=false
 
-# Signature text to insert into clipboard
-SIGNATURE_TEXT="Kind regards,
+# MyLiCuLa configuration file
+CONFIG_FILE="${HOME}/.config/mylicula/mylicula.conf"
 
-Francisco Güemes"
+# Configuration associative array
+declare -A CONFIG
+
+# User full name (to be loaded from config or detected)
+USER_FULL_NAME=""
 
 #==================================================================================================
 # Logging Functions
@@ -132,6 +140,53 @@ setup_logging() {
 }
 
 #
+# Function: load_configuration
+# Description: Load configuration from mylicula.conf file
+# Return: 0 on success, 1 if config file doesn't exist
+#
+load_configuration() {
+    if [[ -f "$CONFIG_FILE" ]]; then
+        debug "Loading configuration from: $CONFIG_FILE"
+        # Source the config file to populate CONFIG array
+        source "$CONFIG_FILE"
+        debug "Configuration loaded successfully"
+        return 0
+    else
+        debug "Configuration file not found: $CONFIG_FILE"
+        return 1
+    fi
+}
+
+#
+# Function: get_user_full_name
+# Description: Get user's full name from config, git, or system
+# Return: Sets USER_FULL_NAME variable
+#
+get_user_full_name() {
+    # Priority 1: Configuration file
+    if [[ -n "${CONFIG[USERNAME_FULL_NAME]:-}" ]]; then
+        USER_FULL_NAME="${CONFIG[USERNAME_FULL_NAME]}"
+        debug "Full name from config: $USER_FULL_NAME"
+        return 0
+    fi
+
+    # Priority 2: Git user.name
+    if command -v git &> /dev/null; then
+        local git_name
+        git_name=$(git config --global user.name 2>/dev/null || echo "")
+        if [[ -n "$git_name" ]]; then
+            USER_FULL_NAME="$git_name"
+            debug "Full name from git config: $USER_FULL_NAME"
+            return 0
+        fi
+    fi
+
+    # Priority 3: System username (fallback)
+    USER_FULL_NAME="$USER"
+    debug "Full name fallback to system username: $USER_FULL_NAME"
+}
+
+#
 # Function: check_dependencies
 # Description: Check if required applications are installed
 # Return: 0 if all dependencies are met, 1 otherwise
@@ -165,11 +220,11 @@ check_dependencies() {
 #
 show_help() {
     cat << EOF
-Insert Name in Clipboard
+Insert Signature in Clipboard
 
 Usage: $SCRIPT_NAME [OPTIONS]
 
-Insert Francisco Güemes signature into the system clipboard
+Insert your signature block into the system clipboard
 
 OPTIONS:
     --debug         Enable debug logging
@@ -181,13 +236,24 @@ DESCRIPTION:
 
         Kind regards,
 
-        Francisco Güemes
+        [Your Full Name]
+
+    The full name is read from the MyLiCuLa configuration file with
+    the following priority:
+        1. ~/.config/mylicula/mylicula.conf (USERNAME_FULL_NAME)
+        2. Git global user.name (git config --global user.name)
+        3. System username (\$USER)
 
     After running this script, you can paste (Ctrl+V) the signature
     anywhere you need it.
 
+CONFIGURATION:
+    Edit ~/.config/mylicula/mylicula.conf and set:
+        CONFIG[USERNAME_FULL_NAME]="Your Full Name"
+
 REQUIREMENTS:
     - xclip (install with: sudo nala install xclip)
+    - MyLiCuLa config file (created by ./install.sh)
 
 EXAMPLES:
     # Copy signature to clipboard
@@ -196,7 +262,7 @@ EXAMPLES:
     # Show what would be copied without actually copying
     $SCRIPT_NAME --dry-run
 
-    # Run with debug output
+    # Run with debug output to see where name is loaded from
     $SCRIPT_NAME --debug
 
 LOG FILE:
@@ -220,20 +286,25 @@ EOF
 insert_to_clipboard() {
     debug "Preparing to insert text into clipboard"
 
+    # Build signature text dynamically
+    local signature_text="Kind regards,
+
+${USER_FULL_NAME}"
+
     if [[ "$DRY_RUN_MODE" == true ]]; then
         log "INFO" "[DRY-RUN] Would copy the following text to clipboard:"
         echo ""
-        echo "$SIGNATURE_TEXT"
+        echo "$signature_text"
         echo ""
         log "INFO" "[DRY-RUN] No actual clipboard operation performed"
         return 0
     fi
 
     # Insert text into clipboard using xclip
-    if echo "$SIGNATURE_TEXT" | xclip -selection clipboard; then
+    if echo "$signature_text" | xclip -selection clipboard; then
         log "INFO" "✓ Signature successfully copied to clipboard"
         debug "Clipboard content:"
-        debug "$SIGNATURE_TEXT"
+        debug "$signature_text"
         return 0
     else
         log "ERROR" "Failed to copy signature to clipboard"
@@ -276,6 +347,13 @@ main() {
     log "INFO" "Starting signature clipboard insertion..."
     debug "Debug mode: $DEBUG_MODE"
     debug "Dry-run mode: $DRY_RUN_MODE"
+
+    # Load configuration
+    load_configuration
+
+    # Get user's full name from config, git, or system
+    get_user_full_name
+    log "INFO" "Using full name: $USER_FULL_NAME"
 
     # Check dependencies
     if ! check_dependencies; then
