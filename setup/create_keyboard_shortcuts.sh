@@ -80,6 +80,7 @@ declare -a SHORTCUTS=(
     "Connect to VPN|connect_to_VPN.sh|<Shift>KP_Add"
     "Disconnect from VPN|disconnect_from_VPN.sh|<Shift>KP_Subtract"
     "Insert signature in clipboard|insert_signature_in_clipboard.sh|<Primary><Shift>s"
+    "Show keyboard layout|show_keyboard_layout.sh|<Super>k"
 )
 
 #==================================================================================================
@@ -112,6 +113,7 @@ DESCRIPTION:
     - <Shift>KP_Add         : Connect to VPN
     - <Shift>KP_Subtract    : Disconnect from VPN
     - <Primary><Shift>s     : Insert signature in clipboard
+    - <Super>k              : Show keyboard layout
 
     The script will:
     - Verify all required scripts are installed in /usr/local/bin
