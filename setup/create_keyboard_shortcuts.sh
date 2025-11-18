@@ -79,6 +79,7 @@ declare -a SHORTCUTS=(
     "Adapt URL in clipboard|update_url_in_clipboard.sh|<Primary>u"
     "Connect to VPN|connect_to_VPN.sh|<Shift>KP_Add"
     "Disconnect from VPN|disconnect_from_VPN.sh|<Shift>KP_Subtract"
+    "Insert signature in clipboard|insert_signature_in_clipboard.sh|<Primary><Shift>s"
 )
 
 #==================================================================================================
@@ -110,6 +111,7 @@ DESCRIPTION:
     - <Primary>u            : Adapt URL in clipboard
     - <Shift>KP_Add         : Connect to VPN
     - <Shift>KP_Subtract    : Disconnect from VPN
+    - <Primary><Shift>s     : Insert signature in clipboard
 
     The script will:
     - Verify all required scripts are installed in /usr/local/bin
