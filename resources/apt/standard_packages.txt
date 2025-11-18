@@ -25,6 +25,10 @@ zenity
 # Used by scripts for user notifications
 libnotify-bin
 
+# Keyboard layout display utility (gkbd-keyboard-display command)
+# Used by show_keyboard_layout.sh to display visual keyboard layout
+gkbd-capplet
+
 
 #****************************************************************************************************
 # Python3 Related Packages
