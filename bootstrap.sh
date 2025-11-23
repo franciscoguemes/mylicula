@@ -122,7 +122,7 @@ check_and_install_nala() {
         info "  sudo apt update"
         info "  sudo apt install nala"
         echo ""
-        error "Nala is not ppresent in the system. Please install it manually."
+        error "Nala is not present in the system. Please install it manually."
         return 1
     fi
 }
