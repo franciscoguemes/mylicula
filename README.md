@@ -110,6 +110,8 @@ mylicula/
 │   └── bash/              # Bash helper scripts
 │       ├── github/        # GitHub repository management
 │       └── gitlab/        # GitLab repository management
+├── docs/                   # Documentation
+│   └── adr/               # Architectural Decision Records (ADRs)
 ├── in_review/              # Scripts under review (staging area)
 ├── lib/                   # Shared utility libraries
 │   ├── common.sh          # Common functions (logging, prompts, symlinks)
@@ -546,7 +548,23 @@ Contributions are welcome! Here's how to contribute:
 3. **Start in Review** - New scripts go in `in_review/`
 4. **Test Thoroughly** - Use dry-run mode and test on fresh system
 5. **Document** - Include clear documentation headers
-6. **Submit PR** - Once tested, submit a pull request
+6. **Create ADRs** - Document significant architectural decisions (see below)
+7. **Submit PR** - Once tested, submit a pull request
+
+### Architectural Decision Records (ADRs)
+
+When making significant architectural or design decisions, document them as ADRs in `docs/adr/`:
+
+- **What to document**: Architecture patterns, technology choices, project structure changes, standards that affect multiple scripts
+- **How to create**: Copy `docs/adr/template.md`, fill in context/decision/consequences/alternatives
+- **Existing ADRs**: See [docs/adr/README.md](docs/adr/README.md) for guidelines and current records
+
+Current key decisions:
+- [ADR-0001](docs/adr/0001-use-installer-interface-pattern.md) - Installer Interface Pattern
+- [ADR-0002](docs/adr/0002-centralize-logs-in-var-log-mylicula.md) - Centralized Logging
+- [ADR-0003](docs/adr/0003-configuration-driven-scripts.md) - Configuration-Driven Scripts
+- [ADR-0004](docs/adr/0004-package-installation-structure.md) - Package Installation Structure
+- [ADR-0005](docs/adr/0005-integrate-bash-scripts-into-repository.md) - Integrate Bash Scripts
 
 ### Contribution Ideas
 
