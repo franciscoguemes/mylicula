@@ -19,6 +19,8 @@ MyLiCuLa is a customization layer for Ubuntu Linux that automates system setup t
 ├── scripts/            - Helper and utility scripts
 │   └── bash/          - Bash helper scripts
 ├── in_review/          - Scripts under review (staging area)
+├── docs/                - Documentation
+│   └── adr/            - Architectural Decision Records
 ├── install.sh          - Main interactive installation script
 ├── README.md           - Project documentation
 ├── Testing.md          - Testing guidelines
@@ -30,6 +32,38 @@ MyLiCuLa is a customization layer for Ubuntu Linux that automates system setup t
 - Bash 4.0+ required (check with `bash --version` or `echo "${BASH_VERSION}"`)
 - Python 3.X support where needed (check with `python3 --version`)
 - All scripts should be bash 4.0+ compatible
+
+## Architectural Decision Records (ADRs)
+
+**When making significant architectural or design decisions, document them as ADRs.**
+
+### What Requires an ADR
+
+Create an ADR when making decisions about:
+- Architecture patterns and conventions (e.g., installer interface pattern)
+- Technology choices or standard tools
+- Project structure and organization changes
+- Key workflows and processes
+- Standards and guidelines that affect multiple scripts
+- Breaking changes to established patterns
+
+### ADR Process
+
+1. **Copy the template**: `cp docs/adr/template.md docs/adr/XXXX-decision-title.md`
+2. **Fill in the sections**: Context, Decision, Consequences, Alternatives
+3. **Start with status "Proposed"**: Change to "Accepted" after approval
+4. **Update the ADR index**: Add entry to table in `docs/adr/README.md`
+
+### Existing ADRs
+
+Key architectural decisions already documented:
+- [ADR-0001](docs/adr/0001-use-installer-interface-pattern.md) - Installer Interface Pattern
+- [ADR-0002](docs/adr/0002-centralize-logs-in-var-log-mylicula.md) - Centralized Logging
+- [ADR-0003](docs/adr/0003-configuration-driven-scripts.md) - Configuration-Driven Scripts
+- [ADR-0004](docs/adr/0004-package-installation-structure.md) - Package Installation Structure
+- [ADR-0005](docs/adr/0005-integrate-bash-scripts-into-repository.md) - Integrate Bash Scripts
+
+See `docs/adr/README.md` for complete list and ADR guidelines.
 
 ## Script Development Workflow
 Scripts move through a review process:

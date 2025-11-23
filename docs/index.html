@@ -42,6 +42,7 @@
                 <li><a href="#quick-start">Quick Start</a></li>
                 <li><a href="#features">Features</a></li>
                 <li><a href="#documentation">Documentation</a></li>
+                <li><a href="#architecture">Architecture</a></li>
                 <li><a href="#contributing">Contributing</a></li>
             </ul>
         </div>
@@ -173,6 +174,11 @@ cd mylicula
                         <a href="https://github.com/franciscoguemes/mylicula/blob/main/TODO.md" target="_blank" class="btn">View TODO</a>
                     </div>
                     <div class="doc-card">
+                        <h3>🏛️ Architecture (ADRs)</h3>
+                        <p>Architectural Decision Records</p>
+                        <a href="https://github.com/franciscoguemes/mylicula/tree/main/docs/adr" target="_blank" class="btn">View ADRs</a>
+                    </div>
+                    <div class="doc-card">
                         <h3>🔗 GitHub Repository</h3>
                         <p>Source code and issues</p>
                         <a href="https://github.com/franciscoguemes/mylicula" target="_blank" class="btn">View on GitHub</a>
@@ -181,7 +187,57 @@ cd mylicula
             </div>
         </section>
 
-        <section id="contributing" class="section alt">
+        <section id="architecture" class="section alt">
+            <div class="container">
+                <h2>Architecture</h2>
+                <p>MyLiCuLa's architecture is documented through Architectural Decision Records (ADRs). These documents capture important decisions made during the project's development.</p>
+
+                <div class="adr-intro">
+                    <h3>📋 What are ADRs?</h3>
+                    <p>Architectural Decision Records document the "why" behind important architectural and design decisions. They help:</p>
+                    <ul>
+                        <li>Understand the reasoning behind technical choices</li>
+                        <li>Track the evolution of the project</li>
+                        <li>Onboard new contributors effectively</li>
+                        <li>Avoid repeating past mistakes</li>
+                    </ul>
+                </div>
+
+                <div class="adrs-grid">
+                    <div class="adr-card">
+                        <h3>ADR-0001: Installer Interface Pattern</h3>
+                        <p>Documents the Template Method pattern used for all installation scripts with required functions and return code conventions.</p>
+                        <a href="https://github.com/franciscoguemes/mylicula/blob/main/docs/adr/0001-use-installer-interface-pattern.md" target="_blank" class="btn">Read ADR</a>
+                    </div>
+                    <div class="adr-card">
+                        <h3>ADR-0002: Centralized Logging</h3>
+                        <p>Explains why all logs go to <code>/var/log/mylicula/</code> and how permissions are managed for both sudo and non-sudo scripts.</p>
+                        <a href="https://github.com/franciscoguemes/mylicula/blob/main/docs/adr/0002-centralize-logs-in-var-log-mylicula.md" target="_blank" class="btn">Read ADR</a>
+                    </div>
+                    <div class="adr-card">
+                        <h3>ADR-0003: Configuration-Driven Scripts</h3>
+                        <p>Documents the approach using <code>~/.config/mylicula/mylicula.conf</code> for runtime configuration with bash associative arrays.</p>
+                        <a href="https://github.com/franciscoguemes/mylicula/blob/main/docs/adr/0003-configuration-driven-scripts.md" target="_blank" class="btn">Read ADR</a>
+                    </div>
+                    <div class="adr-card">
+                        <h3>ADR-0004: Package Installation Structure</h3>
+                        <p>Explains the hybrid approach using metadata comments in package files to maintain relationships between packages, repositories, and GPG keys.</p>
+                        <a href="https://github.com/franciscoguemes/mylicula/blob/main/docs/adr/0004-package-installation-structure.md" target="_blank" class="btn">Read ADR</a>
+                    </div>
+                    <div class="adr-card">
+                        <h3>ADR-0005: Integrate Bash Scripts</h3>
+                        <p>Documents the decision to integrate custom bash scripts into the MyLiCuLa repository rather than maintaining them separately.</p>
+                        <a href="https://github.com/franciscoguemes/mylicula/blob/main/docs/adr/0005-integrate-bash-scripts-into-repository.md" target="_blank" class="btn">Read ADR</a>
+                    </div>
+                </div>
+
+                <div class="info-box">
+                    <strong>📚 View All ADRs:</strong> See the complete <a href="https://github.com/franciscoguemes/mylicula/blob/main/docs/adr/README.md" target="_blank" style="color: inherit; text-decoration: underline;">ADR index</a> for all architectural decisions and guidelines on creating new ADRs.
+                </div>
+            </div>
+        </section>
+
+        <section id="contributing" class="section">
             <div class="container">
                 <h2>Contributing</h2>
                 <p>Contributions are welcome! Here's how to contribute:</p>
@@ -191,6 +247,7 @@ cd mylicula
                     <li><strong>Start in Review</strong> - New scripts go in <code>in_review/</code></li>
                     <li><strong>Test Thoroughly</strong> - Use dry-run mode and test on fresh system</li>
                     <li><strong>Document</strong> - Include clear documentation headers</li>
+                    <li><strong>Create ADRs</strong> - Document significant architectural decisions (see <a href="#architecture" style="text-decoration: underline;">Architecture</a> section)</li>
                     <li><strong>Submit PR</strong> - Once tested, submit a pull request</li>
                 </ol>
                 
