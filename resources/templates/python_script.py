@@ -1,4 +1,12 @@
 #!/usr/bin/env python3
+""" This is a docstring that explains what the script/module/function/class does and it used by convention in Python (PEP 257)
+for better code documentation. Some IDEs show it on mouse hovering on the function. You can show this docstring by importing
+module and using the built in function `help`
+```
+import my_module
+help(my_module)
+```
+"""
 ####################################################################################################
 #Script Name	: yourscriptname.py                                                                                             
 #Description	: Here it goes your description
