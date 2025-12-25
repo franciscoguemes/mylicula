@@ -5,7 +5,7 @@
 # 		  This script is called by "git push" with two arguments, the name of the remote
 # 		  to which the push is done and the url of the remote git server. 
 #		  The hook should exit with non-zero status in case of an invalid branch name. By
-#		  returning a non-zero value, git will cancell the push operation and show an error
+#		  returning a non-zero value, git will cancel the push operation and show an error
 #		  message.
 #                                                                                 
 #Args           : 
